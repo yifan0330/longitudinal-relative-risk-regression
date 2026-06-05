@@ -49,7 +49,9 @@ def _load_data_file(path: Path) -> dict:
     try:
         return {k: v for k, v in loadmat(path).items() if not k.startswith("__")}
     except Exception as exc:
-        raise RuntimeError(f"Cannot load {path} without R; provide pickle, npz, or MAT data with the original filename") from exc
+        raise RuntimeError(
+            f"Cannot load {path} without R; provide pickle, npz, or MAT data with the original filename"
+        ) from exc
 
 
 def _read_ids() -> np.ndarray:
@@ -78,11 +80,13 @@ def _load_lesions(voxel_ids: np.ndarray | None = None):
 def _fit_one(args):
     local_index, global_index, lesions1_row, lesions2_row, ids, df_visits = args
     n_subj = len(lesions1_row)
-    panel = pd.DataFrame({
-        "y": np.r_[lesions1_row, lesions2_row],
-        "vis": np.r_[np.repeat(1, n_subj), np.repeat(2, n_subj)],
-        "eid_8107": np.r_[ids, ids].astype(str),
-    })
+    panel = pd.DataFrame(
+        {
+            "y": np.r_[lesions1_row, lesions2_row],
+            "vis": np.r_[np.repeat(1, n_subj), np.repeat(2, n_subj)],
+            "eid_8107": np.r_[ids, ids].astype(str),
+        }
+    )
     panel = panel.merge(df_visits, on="eid_8107", how="left")
     panel["age_diff_vis2"] = panel["age_diff_vis2"] * np.tile([1, -1], n_subj)
     panel = panel.sort_values(["eid_8107", "vis"])
@@ -90,7 +94,9 @@ def _fit_one(args):
     y = panel["y"].to_numpy(float)
     n_visits = panel["vis"].nunique()
     n_subjects = len(panel) // n_visits
-    model = geefirth(y=y, x=x, id=np.repeat(np.arange(1, n_subjects + 1), n_visits), ar=False)
+    model = geefirth(
+        y=y, x=x, id=np.repeat(np.arange(1, n_subjects + 1), n_visits), ar=False
+    )
     return {
         "beta": model[0]["coefficients"].to_numpy(),
         "beta_se_sandwich": model[0]["std.err"].to_numpy(),
@@ -111,7 +117,12 @@ def main(argv: list[str] | None = None) -> int:
     ids = _read_ids()
     print("Everything loaded")
     df_visits = _read_visits()
-    voxel_ids = pd.read_table(GEE_DIR / "temp_atleast6" / "voxel_IDs_NAs.dat", header=None)[0].to_numpy(dtype=int) - 1
+    voxel_ids = (
+        pd.read_table(GEE_DIR / "temp_atleast6" / "voxel_IDs_NAs.dat", header=None)[
+            0
+        ].to_numpy(dtype=int)
+        - 1
+    )
     lesions_vis1, lesions_vis2 = _load_lesions(voxel_ids)
     subset_size = 1000
     n_subsets = int(np.ceil(lesions_vis1.shape[0] / subset_size))
@@ -125,7 +136,17 @@ def main(argv: list[str] | None = None) -> int:
         stop = min(subset_size * j, lesions_vis1.shape[0])
         subset_idx = np.arange(start, stop)
         print(j)
-        tasks = [(i + 1, subset_idx[i] + 1, lesions_vis1[subset_idx[i], :], lesions_vis2[subset_idx[i], :], ids, df_visits) for i in range(len(subset_idx))]
+        tasks = [
+            (
+                i + 1,
+                subset_idx[i] + 1,
+                lesions_vis1[subset_idx[i], :],
+                lesions_vis2[subset_idx[i], :],
+                ids,
+                df_visits,
+            )
+            for i in range(len(subset_idx))
+        ]
         with Pool(processes=N_CORES) as pool:
             output = pool.map(_fit_one, tasks)
         _save_exact(GEE_DIR / "temp_atleast6" / f"PGEE_NAs_{j}.RData", output)

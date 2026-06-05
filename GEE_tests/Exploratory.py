@@ -3,30 +3,37 @@
 from __future__ import annotations
 
 from pathlib import Path
+
+import matplotlib.pyplot as plt
+import nibabel as nib
 import numpy as np
 import pandas as pd
-import nibabel as nib
-import matplotlib.pyplot as plt
 
 TEMPDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp")
 GEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/GEE_tests")
 PGEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/PGEE_Mondol")
 IMAGEDIR_VIS1 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis")
 IMAGEDIR_VIS2 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis")
-BRAIN_MASK = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii")
+BRAIN_MASK = Path(
+    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii"
+)
 NAMES_COVS = ["Intercept", "avg_age", "age_diff"]
 
 
 def load_rdata(path: Path) -> dict:
     try:
         import pyreadr  # type: ignore
+
         return dict(pyreadr.read_r(str(path)))
     except Exception as first_error:
         try:
             import rdata  # type: ignore
+
             return dict(rdata.conversion.convert(rdata.parser.parse_file(path)))
         except Exception as second_error:
-            raise RuntimeError(f"Could not load {path}; install pyreadr or rdata") from second_error or first_error
+            raise RuntimeError(
+                f"Could not load {path}; install pyreadr or rdata"
+            ) from second_error or first_error
 
 
 def read_nifti(path: Path | str) -> np.ndarray:
@@ -41,7 +48,9 @@ def read_nifti(path: Path | str) -> np.ndarray:
 
 
 def flat_values(image: np.ndarray, voxel_ids: np.ndarray) -> np.ndarray:
-    return np.asarray(image).ravel(order="F")[np.asarray(voxel_ids, dtype=int).reshape(-1) - 1]
+    return np.asarray(image).ravel(order="F")[
+        np.asarray(voxel_ids, dtype=int).reshape(-1) - 1
+    ]
 
 
 def summary_PK(summary_vec, quantiles_vec):
@@ -52,7 +61,11 @@ def summary_PK(summary_vec, quantiles_vec):
     print("---")
     arr = arr[~missing]
     return {
-        "quantiles": np.quantile(arr, quantiles_vec) if arr.size else np.full(len(quantiles_vec), np.nan),
+        "quantiles": (
+            np.quantile(arr, quantiles_vec)
+            if arr.size
+            else np.full(len(quantiles_vec), np.nan)
+        ),
         "mean": float(np.mean(arr)) if arr.size else np.nan,
         "sd": float(np.std(arr, ddof=1)) if arr.size > 1 else np.nan,
         "zeroes": int(np.sum(arr == 0)),
@@ -65,28 +78,52 @@ def r_summary(x):
 
 
 def load_voxel_ids() -> np.ndarray:
-    return pd.read_csv(TEMPDIR / "voxel_IDs_atleast6.dat", sep=r"\s+", header=None).iloc[:, 0].to_numpy(int)
+    return (
+        pd.read_csv(TEMPDIR / "voxel_IDs_atleast6.dat", sep=r"\s+", header=None)
+        .iloc[:, 0]
+        .to_numpy(int)
+    )
 
 
-def cross_tabs_subjects(lesions_vis1: np.ndarray, lesions_vis2: np.ndarray) -> pd.DataFrame:
-    out = np.column_stack([
-        np.sum((lesions_vis1 == 0) & (lesions_vis2 == 0), axis=0),
-        np.sum((lesions_vis1 == 0) & (lesions_vis2 == 1), axis=0),
-        np.sum((lesions_vis1 == 1) & (lesions_vis2 == 0), axis=0),
-        np.sum((lesions_vis1 == 1) & (lesions_vis2 == 1), axis=0),
-    ]).astype(float)
-    out = np.column_stack([out, (out[:, 2] + out[:, 3]) / lesions_vis1.shape[0], (out[:, 1] + out[:, 3]) / lesions_vis1.shape[0]])
+def cross_tabs_subjects(
+    lesions_vis1: np.ndarray, lesions_vis2: np.ndarray
+) -> pd.DataFrame:
+    out = np.column_stack(
+        [
+            np.sum((lesions_vis1 == 0) & (lesions_vis2 == 0), axis=0),
+            np.sum((lesions_vis1 == 0) & (lesions_vis2 == 1), axis=0),
+            np.sum((lesions_vis1 == 1) & (lesions_vis2 == 0), axis=0),
+            np.sum((lesions_vis1 == 1) & (lesions_vis2 == 1), axis=0),
+        ]
+    ).astype(float)
+    out = np.column_stack(
+        [
+            out,
+            (out[:, 2] + out[:, 3]) / lesions_vis1.shape[0],
+            (out[:, 1] + out[:, 3]) / lesions_vis1.shape[0],
+        ]
+    )
     return pd.DataFrame(out, columns=["00", "01", "10", "11", "prb_vis1", "prb_vis2"])
 
 
-def cross_tabs_voxels(lesions_vis1: np.ndarray, lesions_vis2: np.ndarray) -> pd.DataFrame:
-    out = np.column_stack([
-        np.sum((lesions_vis1 == 0) & (lesions_vis2 == 0), axis=1),
-        np.sum((lesions_vis1 == 0) & (lesions_vis2 == 1), axis=1),
-        np.sum((lesions_vis1 == 1) & (lesions_vis2 == 0), axis=1),
-        np.sum((lesions_vis1 == 1) & (lesions_vis2 == 1), axis=1),
-    ]).astype(float)
-    out = np.column_stack([out, (out[:, 2] + out[:, 3]) / lesions_vis1.shape[1], (out[:, 1] + out[:, 3]) / lesions_vis1.shape[1]])
+def cross_tabs_voxels(
+    lesions_vis1: np.ndarray, lesions_vis2: np.ndarray
+) -> pd.DataFrame:
+    out = np.column_stack(
+        [
+            np.sum((lesions_vis1 == 0) & (lesions_vis2 == 0), axis=1),
+            np.sum((lesions_vis1 == 0) & (lesions_vis2 == 1), axis=1),
+            np.sum((lesions_vis1 == 1) & (lesions_vis2 == 0), axis=1),
+            np.sum((lesions_vis1 == 1) & (lesions_vis2 == 1), axis=1),
+        ]
+    ).astype(float)
+    out = np.column_stack(
+        [
+            out,
+            (out[:, 2] + out[:, 3]) / lesions_vis1.shape[1],
+            (out[:, 1] + out[:, 3]) / lesions_vis1.shape[1],
+        ]
+    )
     return pd.DataFrame(out, columns=["00", "01", "10", "11", "prb_vis1", "prb_vis2"])
 
 
@@ -94,8 +131,10 @@ def plot_compare(x, y, title, out_path, xlim=None, ylim=None):
     plt.figure(figsize=(5, 5))
     plt.scatter(x, y, marker=".", s=4)
     plt.title(title)
-    if xlim: plt.xlim(*xlim)
-    if ylim: plt.ylim(*ylim)
+    if xlim:
+        plt.xlim(*xlim)
+    if ylim:
+        plt.ylim(*ylim)
     lo, hi = plt.xlim()
     plt.plot([lo, hi], [lo, hi])
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -103,7 +142,9 @@ def plot_compare(x, y, title, out_path, xlim=None, ylim=None):
     plt.close()
 
 
-def summarize_maps(base_dir: Path, result_dir: str, voxel_ids: np.ndarray, cov_names=NAMES_COVS):
+def summarize_maps(
+    base_dir: Path, result_dir: str, voxel_ids: np.ndarray, cov_names=NAMES_COVS
+):
     for cov in cov_names:
         print(f"## {base_dir / result_dir}: {cov}")
         for prefix in ["estimate", "se", "zscore"]:
@@ -139,16 +180,22 @@ def main() -> int:
     (GEEDIR / "temp_atleast6").mkdir(parents=True, exist_ok=True)
     np.savetxt(GEEDIR / "temp_atleast6" / "voxel_IDs_NAs.dat", voxel_idx, fmt="%d")
 
-    estimate_intercept = read_nifti(GEEDIR / "results_atleast6" / "estimate_Intercept_GEE")
+    estimate_intercept = read_nifti(
+        GEEDIR / "results_atleast6" / "estimate_Intercept_GEE"
+    )
     estimate_age = read_nifti(GEEDIR / "results_atleast6" / "estimate_avg_age_GEE")
     estimate_time = read_nifti(GEEDIR / "results_atleast6" / "estimate_age_diff_GEE")
     xbeta60 = estimate_intercept + estimate_age * 60
     xbeta70 = estimate_intercept + estimate_age * 70
-    rr_age = (np.exp(xbeta70) / (1 + np.exp(xbeta70))) / (np.exp(xbeta60) / (1 + np.exp(xbeta60)))
+    rr_age = (np.exp(xbeta70) / (1 + np.exp(xbeta70))) / (
+        np.exp(xbeta60) / (1 + np.exp(xbeta60))
+    )
     print(summary_PK(flat_values(rr_age, voxel_ids), [0, 0.25, 0.5, 0.75, 1]))
     xbeta_vis1 = estimate_intercept + estimate_age * 60 + estimate_time * -5
     xbeta_vis2 = estimate_intercept + estimate_age * 60 + estimate_time * 5
-    rr_stable = np.exp(estimate_time * 10) * (1 + np.exp(xbeta_vis1)) / (1 + np.exp(xbeta_vis2))
+    rr_stable = (
+        np.exp(estimate_time * 10) * (1 + np.exp(xbeta_vis1)) / (1 + np.exp(xbeta_vis2))
+    )
     print(summary_PK(flat_values(rr_stable, voxel_ids), [0, 0.25, 0.5, 0.75, 1]))
 
     summarize_maps(PGEEDIR, "results_atleast6", voxel_ids)
@@ -158,7 +205,14 @@ def main() -> int:
         xv = flat_values(z_gee, voxel_ids)
         yv = flat_values(z_pgee, voxel_ids)
         ok = ~np.isnan(xv) & ~np.isnan(yv)
-        plot_compare(xv[ok], yv[ok], title, GEEDIR / "figures" / f"exploratory_{cov}_gee_vs_pgee.png", (-15, 10), (-15, 10))
+        plot_compare(
+            xv[ok],
+            yv[ok],
+            title,
+            GEEDIR / "figures" / f"exploratory_{cov}_gee_vs_pgee.png",
+            (-15, 10),
+            (-15, 10),
+        )
     _ = brain_mask, empir_prob_vis1, empir_prob_vis2, temp_idx
     return 0
 

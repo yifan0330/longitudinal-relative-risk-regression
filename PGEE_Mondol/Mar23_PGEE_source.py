@@ -1,4 +1,5 @@
 """March 2023 variant of the penalized logistic GEE routines."""
+
 from __future__ import annotations
 
 try:

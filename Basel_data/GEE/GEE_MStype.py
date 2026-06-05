@@ -6,18 +6,23 @@ import math
 import pickle
 import sys
 import time
-from pathlib import Path
 from multiprocessing import Pool
+from pathlib import Path
 
+import nibabel as nib
 import numpy as np
 import pandas as pd
-import nibabel as nib
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
 
 def read_table(path, header=True, sep=None):
-    return pd.read_csv(path, sep=sep if sep is not None else r"\s+", header=0 if header else None, engine="python")
+    return pd.read_csv(
+        path,
+        sep=sep if sep is not None else r"\s+",
+        header=0 if header else None,
+        engine="python",
+    )
 
 
 def write_table(df, path, header=True):
@@ -27,7 +32,9 @@ def write_table(df, path, header=True):
 
 def load_nifti(path):
     p = Path(path)
-    candidates = [p] if p.exists() else [Path(str(p) + ext) for ext in (".nii.gz", ".nii")]
+    candidates = (
+        [p] if p.exists() else [Path(str(p) + ext) for ext in (".nii.gz", ".nii")]
+    )
     for candidate in candidates:
         if candidate.exists():
             img = nib.load(str(candidate))
@@ -59,6 +66,7 @@ def load_rdata(path):
     path = str(path)
     try:
         import pyreadr
+
         res = pyreadr.read_r(path)
         return dict(res.items())
     except Exception:
@@ -75,11 +83,16 @@ def save_rdata(path, **objects):
 
 def vector_summary(x, name="x"):
     s = pd.Series(np.asarray(x).ravel()).dropna()
-    print(f"{name}: empty" if s.empty else f"{name}: min={s.min()} median={s.median()} mean={s.mean()} max={s.max()} n={len(s)}")
+    print(
+        f"{name}: empty"
+        if s.empty
+        else f"{name}: min={s.min()} median={s.median()} mean={s.mean()} max={s.max()} n={len(s)}"
+    )
 
 
 def binarize(data, threshold=0.5):
     return (np.asarray(data) >= threshold).astype(np.uint8)
+
 
 N_CORES = 8
 TEMPDIR = "/well/nichols/users/kindalov/FMRIB/Longitudinal/Basel_data/"
@@ -87,7 +100,7 @@ GEEDIR = "/well/nichols/users/kindalov/FMRIB/Longitudinal/Basel_data/GEE/"
 COV_FILE = "AgeSexMStype_complete.dat"
 FORMULA = "y ~ AGE + SEX + DISCRS"
 OUT_SUBDIR = "temp_MS"
-MERGE_KEYS = ['PT', 'vis']
+MERGE_KEYS = ["PT", "vis"]
 VIS_VALUES = [1, 2, 3]
 
 
@@ -103,15 +116,33 @@ def fit_gee(args):
     try:
         lesions_bs, lesions_y1, lesions_y2 = _load_lesions()
         n_subj = lesions_bs.shape[1]
-        y = np.concatenate([lesions_bs[global_idx], lesions_y1[global_idx], lesions_y2[global_idx]]).astype(float)
+        y = np.concatenate(
+            [lesions_bs[global_idx], lesions_y1[global_idx], lesions_y2[global_idx]]
+        ).astype(float)
         pt_values = pd.unique(df_vars["PT"])
-        panel = pd.DataFrame({"y": y, "vis": np.repeat(VIS_VALUES, n_subj), "PT": np.tile(pt_values, 3)})
-        panel = panel.merge(df_vars, on=MERGE_KEYS, how="inner").sort_values(["PT", "vis"])
+        panel = pd.DataFrame(
+            {"y": y, "vis": np.repeat(VIS_VALUES, n_subj), "PT": np.tile(pt_values, 3)}
+        )
+        panel = panel.merge(df_vars, on=MERGE_KEYS, how="inner").sort_values(
+            ["PT", "vis"]
+        )
         n_visits = panel["vis"].nunique()
         n_subjects = int(len(panel) / n_visits)
         panel["cluster_id"] = np.repeat(np.arange(n_subjects), n_visits)
-        result = smf.gee(FORMULA, groups="cluster_id", data=panel, family=sm.families.Binomial(), cov_struct=sm.cov_struct.Independence()).fit(scale=1.0)
-        return {"beta": result.params.to_numpy(), "beta_se_sandwich": result.bse.to_numpy(), "beta_names": list(result.params.index), "alpha": getattr(result.cov_struct, "dep_params", None), "voxel": int(local_i + 1)}
+        result = smf.gee(
+            FORMULA,
+            groups="cluster_id",
+            data=panel,
+            family=sm.families.Binomial(),
+            cov_struct=sm.cov_struct.Independence(),
+        ).fit(scale=1.0)
+        return {
+            "beta": result.params.to_numpy(),
+            "beta_se_sandwich": result.bse.to_numpy(),
+            "beta_names": list(result.params.index),
+            "alpha": getattr(result.cov_struct, "dep_params", None),
+            "voxel": int(local_i + 1),
+        }
     except Exception as exc:
         return {"error": repr(exc), "voxel": int(local_i + 1)}
 

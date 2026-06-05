@@ -1,4 +1,5 @@
 """Log-Poisson GEE with dispersion, ported from gee_logPoisson_dispersion_fn.R."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -22,11 +23,23 @@ def _block_diag_repeat(mat: np.ndarray, times: int) -> np.ndarray:
 
 
 def _cluster_mask(n_subj: int, n_visits: int) -> np.ndarray:
-    blocks = [np.ones((int(n_visits), int(n_visits)), dtype=float) for _ in range(int(n_subj))]
+    blocks = [
+        np.ones((int(n_visits), int(n_visits)), dtype=float) for _ in range(int(n_subj))
+    ]
     return block_diag(*blocks)
 
 
-def _gee_core(y, X, n_subj: int, n_visits: int, covariance="Independence", tol=1e-4, max_iter=10, phi_est=True, penalty="none"):
+def _gee_core(
+    y,
+    X,
+    n_subj: int,
+    n_visits: int,
+    covariance="Independence",
+    tol=1e-4,
+    max_iter=10,
+    phi_est=True,
+    penalty="none",
+):
     y = np.asarray(y, dtype=float).reshape(-1)
     X = np.asarray(X, dtype=float)
     n_subj, n_visits = int(n_subj), int(n_visits)
@@ -67,7 +80,11 @@ def _gee_core(y, X, n_subj: int, n_visits: int, covariance="Independence", tol=1
                 idx = slice(subject * n_visits, (subject + 1) * n_visits)
                 rr = np.outer(res[idx], res[idx])
                 sum_res += rr.sum() - np.trace(rr)
-            alpha = phi * (sum_res / (n_visits * (n_visits - 1))) / n_subj if n_visits > 1 else 0.0
+            alpha = (
+                phi * (sum_res / (n_visits * (n_visits - 1))) / n_subj
+                if n_visits > 1
+                else 0.0
+            )
             alpha = float(np.clip(alpha, -0.95, 0.95))
             R = np.full((n_visits, n_visits), alpha)
             np.fill_diagonal(R, 1.0)
@@ -139,5 +156,16 @@ def _gee_core(y, X, n_subj: int, n_visits: int, covariance="Independence", tol=1
     return out
 
 
-def gee_dispersion_run(y, X, n_subj, n_visits, covariance="Independence", tol=1e-4, max_iter=10, phi_est=True):
-    return _gee_core(y, X, n_subj, n_visits, covariance, tol, max_iter, phi_est, penalty="none")
+def gee_dispersion_run(
+    y,
+    X,
+    n_subj,
+    n_visits,
+    covariance="Independence",
+    tol=1e-4,
+    max_iter=10,
+    phi_est=True,
+):
+    return _gee_core(
+        y, X, n_subj, n_visits, covariance, tol, max_iter, phi_est, penalty="none"
+    )

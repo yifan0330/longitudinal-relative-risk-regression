@@ -1,4 +1,5 @@
 """Simulation data generation formerly implemented in source_simdata.R."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -32,7 +33,9 @@ def _nearest_correlation(corr: np.ndarray) -> np.ndarray:
     return corr
 
 
-def simulate_correlated_bernoulli(probs: np.ndarray, corr: np.ndarray, rng: np.random.Generator | None = None) -> np.ndarray:
+def simulate_correlated_bernoulli(
+    probs: np.ndarray, corr: np.ndarray, rng: np.random.Generator | None = None
+) -> np.ndarray:
     """Approximate binarySimCLF with a Gaussian-copula Bernoulli simulator.
 
     The R package binarySimCLF constructs Bernoulli vectors for compatible mean/
@@ -46,7 +49,15 @@ def simulate_correlated_bernoulli(probs: np.ndarray, corr: np.ndarray, rng: np.r
     return (z <= norm.ppf(probs)).astype(int)
 
 
-def gen_dataPP(beta, nc: int, cl_size=range(2, 7), p: float | None = None, rho: float = 0.0, prop: float | None = None, rng: np.random.Generator | None = None) -> pd.DataFrame:
+def gen_dataPP(
+    beta,
+    nc: int,
+    cl_size=range(2, 7),
+    p: float | None = None,
+    rho: float = 0.0,
+    prop: float | None = None,
+    rng: np.random.Generator | None = None,
+) -> pd.DataFrame:
     """Generate clustered binary data for the log-risk simulations.
 
     Parameters mirror the original R function.  ``p`` is the Bernoulli
@@ -83,7 +94,9 @@ def gen_dataPP(beta, nc: int, cl_size=range(2, 7), p: float | None = None, rho: 
         y_parts.append(simulate_correlated_bernoulli(probs[start:stop], corr, rng))
         start = stop
     y = np.concatenate(y_parts)
-    return pd.DataFrame({"id": ids, "yij": y, "intercept": intercept, "X1i": x1, "obstime": obstime})
+    return pd.DataFrame(
+        {"id": ids, "yij": y, "intercept": intercept, "X1i": x1, "obstime": obstime}
+    )
 
 
 # R-compatible alias

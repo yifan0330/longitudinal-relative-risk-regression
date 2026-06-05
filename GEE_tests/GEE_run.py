@@ -14,8 +14,12 @@ import pandas as pd
 
 TEMPDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp")
 GEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/GEE_tests")
-IMAGE_DIR_VIS1 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis")
-IMAGE_DIR_VIS2 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis")
+IMAGE_DIR_VIS1 = Path(
+    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis"
+)
+IMAGE_DIR_VIS2 = Path(
+    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis"
+)
 SUBJECT_FILE = Path("/well/nichols/users/kindalov/FMRIB/bianca_1vis_2vis_overlap.txt")
 
 
@@ -25,7 +29,9 @@ def load_rdata(path: Path) -> dict:
     try:
         import pyreadr  # type: ignore
     except ImportError as exc:
-        raise ImportError("Reading .RData requires pyreadr; install it or provide data in a Python-readable format.") from exc
+        raise ImportError(
+            "Reading .RData requires pyreadr; install it or provide data in a Python-readable format."
+        ) from exc
     return dict(pyreadr.read_r(str(path)))
 
 
@@ -70,8 +76,12 @@ def load_visits() -> pd.DataFrame:
 def load_lesions() -> tuple[np.ndarray, np.ndarray]:
     data = load_rdata(TEMPDIR / "lesions_atleast6.RData")
     if "lesions_vis1" not in data or "lesions_vis2" not in data:
-        raise KeyError("lesions_atleast6.RData must contain lesions_vis1 and lesions_vis2")
-    return np.asarray(data["lesions_vis1"], dtype=float), np.asarray(data["lesions_vis2"], dtype=float)
+        raise KeyError(
+            "lesions_atleast6.RData must contain lesions_vis1 and lesions_vis2"
+        )
+    return np.asarray(data["lesions_vis1"], dtype=float), np.asarray(
+        data["lesions_vis2"], dtype=float
+    )
 
 
 def subset_indices(n_rows: int, subset_size: int, j_1based: int) -> np.ndarray:
@@ -80,29 +90,37 @@ def subset_indices(n_rows: int, subset_size: int, j_1based: int) -> np.ndarray:
     return np.arange(start, stop, dtype=int)
 
 
-def make_panel(local_i: int, subset_idx: np.ndarray, ids: np.ndarray, df_visits: pd.DataFrame) -> pd.DataFrame:
+def make_panel(
+    local_i: int, subset_idx: np.ndarray, ids: np.ndarray, df_visits: pd.DataFrame
+) -> pd.DataFrame:
     lesions_vis1, lesions_vis2 = load_lesions()
     lesions_vis1 = lesions_vis1[subset_idx, :]
     lesions_vis2 = lesions_vis2[subset_idx, :]
     n_subj = lesions_vis1.shape[1]
-    panel = pd.DataFrame({
-        "y": np.r_[lesions_vis1[local_i, :], lesions_vis2[local_i, :]],
-        "vis": np.r_[np.repeat(1, n_subj), np.repeat(2, n_subj)],
-        "eid_8107": np.r_[ids, ids].astype(str),
-    })
+    panel = pd.DataFrame(
+        {
+            "y": np.r_[lesions_vis1[local_i, :], lesions_vis2[local_i, :]],
+            "vis": np.r_[np.repeat(1, n_subj), np.repeat(2, n_subj)],
+            "eid_8107": np.r_[ids, ids].astype(str),
+        }
+    )
     panel = panel.merge(df_visits, on="eid_8107", how="left")
-    panel["age_diff_vis2"] = panel["age_diff_vis2"].to_numpy() * np.tile([1, -1], n_subj)
+    panel["age_diff_vis2"] = panel["age_diff_vis2"].to_numpy() * np.tile(
+        [1, -1], n_subj
+    )
     panel = panel.sort_values(["eid_8107", "vis"]).reset_index(drop=True)
     return panel
 
 
 def design_matrix(panel: pd.DataFrame) -> np.ndarray:
-    return np.column_stack([
-        np.ones(len(panel)),
-        panel["avg_age"].to_numpy(dtype=float),
-        panel["age_diff_vis2"].to_numpy(dtype=float),
-        panel["sexM"].to_numpy(dtype=float),
-    ])
+    return np.column_stack(
+        [
+            np.ones(len(panel)),
+            panel["avg_age"].to_numpy(dtype=float),
+            panel["age_diff_vis2"].to_numpy(dtype=float),
+            panel["sexM"].to_numpy(dtype=float),
+        ]
+    )
 
 
 def run_parallel(fn, n_items: int, n_cores: int):

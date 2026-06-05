@@ -1,4 +1,5 @@
 """Penalized logistic GEE routines ported from PGEE_source.R."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -27,7 +28,10 @@ def W_f(var_mu):
 
 
 def error(y, mu, var_mu):
-    return [(np.asarray(yi) - np.asarray(mi)) / np.sqrt(np.clip(vi, 1e-12, None)) for yi, mi, vi in zip(y, mu, var_mu)]
+    return [
+        (np.asarray(yi) - np.asarray(mi)) / np.sqrt(np.clip(vi, 1e-12, None))
+        for yi, mi, vi in zip(y, mu, var_mu)
+    ]
 
 
 def AR1_f(e):
@@ -77,7 +81,10 @@ def pD_f(W, x):
 
 
 def d_f(x, W, V, y, mu):
-    return [np.asarray(xi).T @ Wi @ _pinv(Vi) @ (np.asarray(yi) - np.asarray(mi)) for xi, Wi, Vi, yi, mi in zip(x, W, V, y, mu)]
+    return [
+        np.asarray(xi).T @ Wi @ _pinv(Vi) @ (np.asarray(yi) - np.asarray(mi))
+        for xi, Wi, Vi, yi, mi in zip(x, W, V, y, mu)
+    ]
 
 
 def Vmi_f(D, V):
@@ -121,7 +128,10 @@ def Q_f(mu):
 
 
 def Z_f(x):
-    return [[np.diag(np.asarray(xi)[:, j]) for j in range(np.asarray(xi).shape[1])] for xi in x]
+    return [
+        [np.diag(np.asarray(xi)[:, j]) for j in range(np.asarray(xi).shape[1])]
+        for xi in x
+    ]
 
 
 def FFi_f(x, W, R, Q, Z, phi):
@@ -142,14 +152,19 @@ def Pi_f(I, FF):
 
 
 def Ustari_f(x, W, V, y, mu, P):
-    U = sum(np.asarray(xi).T @ Wi @ _pinv(Vi) @ (np.asarray(yi) - np.asarray(mi)) for xi, Wi, Vi, yi, mi in zip(x, W, V, y, mu))
+    U = sum(
+        np.asarray(xi).T @ Wi @ _pinv(Vi) @ (np.asarray(yi) - np.asarray(mi))
+        for xi, Wi, Vi, yi, mi in zip(x, W, V, y, mu)
+    )
     return U + 0.5 * np.asarray(P)
 
 
 def _split_by_id(frame: pd.DataFrame, ids, columns):
     frame = frame.copy()
     frame["__id__"] = np.asarray(ids)
-    return [g[columns].to_numpy(dtype=float) for _, g in frame.groupby("__id__", sort=False)]
+    return [
+        g[columns].to_numpy(dtype=float) for _, g in frame.groupby("__id__", sort=False)
+    ]
 
 
 def GEE_sd_corr(y, x, beta, nc, ar=False):
@@ -168,7 +183,11 @@ def GEE_sd_corr(y, x, beta, nc, ar=False):
     Vs = Vs_f(Vm, B)
     VsM = VsM_f(Vm, B, nc)
     corr = R[0][1, 0] if R and R[0].shape[0] > 1 else 0.0
-    return {"Vs": np.sqrt(np.clip(np.diag(Vs), 0, None)), "VsMod": np.sqrt(np.clip(np.diag(VsM), 0, None)), "corr": np.repeat(corr, len(beta))}
+    return {
+        "Vs": np.sqrt(np.clip(np.diag(Vs), 0, None)),
+        "VsMod": np.sqrt(np.clip(np.diag(VsM), 0, None)),
+        "corr": np.repeat(corr, len(beta)),
+    }
 
 
 def _geefirth_impl(y, x, ids, ar=True, init_offset=0.0, keep_trace=False, max_iter=25):
@@ -181,13 +200,22 @@ def _geefirth_impl(y, x, ids, ar=True, init_offset=0.0, keep_trace=False, max_it
     id_counts = pd.Series(ids_arr[df.index]).value_counts()
     single = id_counts[id_counts == 1]
     if len(single):
-        raise ValueError(f"Clusters with a single observation: {','.join(map(str, single.index))}")
+        raise ValueError(
+            f"Clusters with a single observation: {','.join(map(str, single.index))}"
+        )
 
-    X_df = pd.concat([pd.Series(1.0, index=x_df.index, name="intercept"), x_df], axis=1).iloc[df.index]
+    X_df = pd.concat(
+        [pd.Series(1.0, index=x_df.index, name="intercept"), x_df], axis=1
+    ).iloc[df.index]
     names = list(X_df.columns)
     beta = np.r_[np.log(np.mean(df["y"]) + init_offset), np.zeros(X_df.shape[1] - 1)]
     x_split = _split_by_id(X_df, ids_arr[df.index], names)
-    y_split = [g["y"].to_numpy(dtype=float) for _, g in pd.concat([df[["y"]], pd.Series(ids_arr[df.index], name="__id__")], axis=1).groupby("__id__", sort=False)]
+    y_split = [
+        g["y"].to_numpy(dtype=float)
+        for _, g in pd.concat(
+            [df[["y"]], pd.Series(ids_arr[df.index], name="__id__")], axis=1
+        ).groupby("__id__", sort=False)
+    ]
     nc = len(y_split)
     se_model_trace = []
     se_model = np.full(len(beta), np.nan)
@@ -221,9 +249,31 @@ def _geefirth_impl(y, x, ids, ar=True, init_offset=0.0, keep_trace=False, max_it
     t_swm = beta / sd["VsMod"]
     p_sw = student_t.sf(np.abs(t_sw), max(n - p, 1))
     p_swm = student_t.sf(np.abs(t_swm), max(n - p, 1))
-    est_sw = pd.DataFrame({"coefficients": beta, "std.err": sd["Vs"], "Wald": np.round(t_sw, 4) ** 2, "p.val": np.round(p_sw, 4)}, index=names)
-    est_swm = pd.DataFrame({"coefficients": beta, "std.err": sd["VsMod"], "Wald": np.round(t_swm, 4) ** 2, "p.val": np.round(p_swm, 4)}, index=names)
-    result = [est_sw, est_swm, sd["corr"][1] if len(sd["corr"]) > 1 else sd["corr"][0], counter, phi]
+    est_sw = pd.DataFrame(
+        {
+            "coefficients": beta,
+            "std.err": sd["Vs"],
+            "Wald": np.round(t_sw, 4) ** 2,
+            "p.val": np.round(p_sw, 4),
+        },
+        index=names,
+    )
+    est_swm = pd.DataFrame(
+        {
+            "coefficients": beta,
+            "std.err": sd["VsMod"],
+            "Wald": np.round(t_swm, 4) ** 2,
+            "p.val": np.round(p_swm, 4),
+        },
+        index=names,
+    )
+    result = [
+        est_sw,
+        est_swm,
+        sd["corr"][1] if len(sd["corr"]) > 1 else sd["corr"][0],
+        counter,
+        phi,
+    ]
     if keep_trace:
         result.extend([se_model, np.asarray(se_model_trace)])
     return result

@@ -11,7 +11,9 @@ import pandas as pd
 
 TEMPDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp")
 GEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/GEE_tests")
-BRAIN_MASK_FILE = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii")
+BRAIN_MASK_FILE = Path(
+    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii"
+)
 RESULT_IN_DIR = GEEDIR / "temp_penalty_poisson_sexM_exch_geePK_max25"
 RESULT_OUT_DIR = GEEDIR / "results_penalty_poisson_sexM_exch_geePK_max25"
 
@@ -43,26 +45,40 @@ def summarize(values) -> None:
 
 
 def subset_indices(n_rows: int, subset_size: int, j_1based: int) -> np.ndarray:
-    return np.arange(subset_size * (j_1based - 1), min(subset_size * j_1based, n_rows), dtype=int)
+    return np.arange(
+        subset_size * (j_1based - 1), min(subset_size * j_1based, n_rows), dtype=int
+    )
 
 
-def put_values(mask_img: nib.Nifti1Image, voxel_ids_1based: np.ndarray, values: np.ndarray) -> nib.Nifti1Image:
+def put_values(
+    mask_img: nib.Nifti1Image, voxel_ids_1based: np.ndarray, values: np.ndarray
+) -> nib.Nifti1Image:
     data = np.asarray(mask_img.get_fdata()).copy()
     data[data != 0] = 0
     flat = data.ravel(order="F")
     flat[voxel_ids_1based.astype(int) - 1] = np.asarray(values, dtype=float).reshape(-1)
-    return nib.Nifti1Image(flat.reshape(data.shape, order="F"), mask_img.affine, mask_img.header)
+    return nib.Nifti1Image(
+        flat.reshape(data.shape, order="F"), mask_img.affine, mask_img.header
+    )
 
 
 def write_nifti(img: nib.Nifti1Image, prefix: Path) -> None:
     prefix.parent.mkdir(parents=True, exist_ok=True)
-    filename = prefix if str(prefix).endswith((".nii", ".nii.gz")) else Path(str(prefix) + ".nii.gz")
+    filename = (
+        prefix
+        if str(prefix).endswith((".nii", ".nii.gz"))
+        else Path(str(prefix) + ".nii.gz")
+    )
     nib.save(img, filename)
 
 
 def main() -> int:
     brain_mask = nib.load(str(BRAIN_MASK_FILE))
-    voxel_ids = read_table(TEMPDIR / "voxel_IDs_atleast6.dat", header=None).iloc[:, 0].to_numpy(dtype=int)
+    voxel_ids = (
+        read_table(TEMPDIR / "voxel_IDs_atleast6.dat", header=None)
+        .iloc[:, 0]
+        .to_numpy(dtype=int)
+    )
     P = 4
     estimates = np.zeros((len(voxel_ids), P), dtype=float)
     stderror = np.zeros_like(estimates)
@@ -71,7 +87,9 @@ def main() -> int:
     output_all = [None] * len(voxel_ids)
 
     subset_size = 1000
-    lesions_vis1 = np.asarray(load_rdata(TEMPDIR / "lesions_atleast6.RData")["lesions_vis1"])
+    lesions_vis1 = np.asarray(
+        load_rdata(TEMPDIR / "lesions_atleast6.RData")["lesions_vis1"]
+    )
     n_subsets = math.ceil(lesions_vis1.shape[0] / subset_size)
     print(n_subsets)
 
@@ -82,8 +100,12 @@ def main() -> int:
         for k, item in enumerate(output):
             row = subset_idx[k]
             if isinstance(item, dict):
-                estimates[row, :] = np.asarray(item.get("beta", np.repeat(np.nan, P)), dtype=float)[:P]
-                stderror[row, :] = np.asarray(item.get("beta_se_sandwich", np.repeat(np.nan, P)), dtype=float)[:P]
+                estimates[row, :] = np.asarray(
+                    item.get("beta", np.repeat(np.nan, P)), dtype=float
+                )[:P]
+                stderror[row, :] = np.asarray(
+                    item.get("beta_se_sandwich", np.repeat(np.nan, P)), dtype=float
+                )[:P]
                 alpha[row, 0] = float(item.get("alpha", np.nan))
                 iterations[row, 0] = float(item.get("iterations", np.nan))
             else:
@@ -119,14 +141,18 @@ def main() -> int:
 
     RESULT_OUT_DIR.mkdir(parents=True, exist_ok=True)
     with (RESULT_OUT_DIR / "results_exch_GEE.Rdata").open("wb") as f:
-        pickle.dump({
-            "estimates": estimates,
-            "stderror": stderror,
-            "zscores": zscores,
-            "alpha": alpha,
-            "iterations": iterations,
-            "output_all": output_all,
-        }, f, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(
+            {
+                "estimates": estimates,
+                "stderror": stderror,
+                "zscores": zscores,
+                "alpha": alpha,
+                "iterations": iterations,
+                "output_all": output_all,
+            },
+            f,
+            protocol=pickle.HIGHEST_PROTOCOL,
+        )
     return 0
 
 

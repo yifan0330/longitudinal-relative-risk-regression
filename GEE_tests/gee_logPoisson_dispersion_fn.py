@@ -59,14 +59,16 @@ def _poisson_alpha(y, mu, n_subj, n_visits, covariance):
     if covariance == "ar1":
         res_temp = np.zeros((n_visits, n_visits), dtype=float)
         for s in range(n_subj):
-            r = res[s * n_visits:(s + 1) * n_visits].reshape(-1, 1)
+            r = res[s * n_visits : (s + 1) * n_visits].reshape(-1, 1)
             res_temp += r @ r.T
-        alpha = sum(res_temp[i, i + 1] for i in range(n_visits - 1)) / ((n_visits - 1) * n_subj)
+        alpha = sum(res_temp[i, i + 1] for i in range(n_visits - 1)) / (
+            (n_visits - 1) * n_subj
+        )
         return float(alpha), _ar1_cor(n_visits, alpha)
     if covariance == "exchangeable":
         total = 0.0
         for s in range(n_subj):
-            r = res[s * n_visits:(s + 1) * n_visits].reshape(-1, 1)
+            r = res[s * n_visits : (s + 1) * n_visits].reshape(-1, 1)
             rr = r @ r.T
             total += rr.sum() - np.trace(rr)
         alpha = total / (n_visits * (n_visits - 1) * n_subj)
@@ -80,7 +82,16 @@ def _finish_iter(beta_old, beta_new, tol):
     return bool(np.all(np.abs(beta_old.reshape(-1, 1) - beta_new.reshape(-1, 1)) < tol))
 
 
-def gee_dispersion_run(y, X, n_subj, n_visits, covariance="Independence", tol=1e-4, max_iter=10, verbose=False):
+def gee_dispersion_run(
+    y,
+    X,
+    n_subj,
+    n_visits,
+    covariance="Independence",
+    tol=1e-4,
+    max_iter=10,
+    verbose=False,
+):
     y = _as_col(y)
     X = _as_matrix(X)
     n_subj, n_visits, max_iter = int(n_subj), int(n_visits), int(max_iter)
@@ -98,7 +109,7 @@ def gee_dispersion_run(y, X, n_subj, n_visits, covariance="Independence", tol=1e
     se_trace = np.full((max_iter, P), np.nan)
     se_model_trace = np.full((max_iter, P), np.nan)
 
-    for it in range(max_iter):
+    for _ in range(max_iter):
         I_inv = _spdinv(I)
         beta_new = beta_old + I_inv @ U
         if verbose:
@@ -111,10 +122,10 @@ def gee_dispersion_run(y, X, n_subj, n_visits, covariance="Independence", tol=1e
         elif cov == "exchangeable":
             res = ((y - mu) / np.sqrt(np.clip(mu, 1e-12, None))).reshape(-1)
             denom = max(n_obs - P, 1)
-            phi = 1.0 / (np.sum(res ** 2) / denom)
+            phi = 1.0 / (np.sum(res**2) / denom)
             total = 0.0
             for s in range(n_subj):
-                r = res[s * n_visits:(s + 1) * n_visits].reshape(-1, 1)
+                r = res[s * n_visits : (s + 1) * n_visits].reshape(-1, 1)
                 rr = r @ r.T
                 total += rr.sum() - np.trace(rr)
             alpha = phi * total / (n_visits * (n_visits - 1) * n_subj)
@@ -156,4 +167,6 @@ def gee_dispersion_run(y, X, n_subj, n_visits, covariance="Independence", tol=1e
 
 
 if __name__ == "__main__":
-    raise SystemExit("Import gee_dispersion_run() from this module; it is not a command-line runner.")
+    raise SystemExit(
+        "Import gee_dispersion_run() from this module; it is not a command-line runner."
+    )

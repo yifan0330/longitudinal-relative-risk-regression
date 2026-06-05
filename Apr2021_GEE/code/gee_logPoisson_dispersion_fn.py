@@ -24,7 +24,16 @@ def _sandwich(tmp5_blocks, residual_blocks, i_inv):
     return i_inv @ meat @ i_inv
 
 
-def gee_dispersion_run(y, X, n_subj, n_visits, covariance='Independence', tol=1e-4, max_iter=10, phi_est=True):
+def gee_dispersion_run(
+    y,
+    X,
+    n_subj,
+    n_visits,
+    covariance="Independence",
+    tol=1e-4,
+    max_iter=10,
+    phi_est=True,
+):
     y = np.asarray(y, dtype=float).reshape(-1)
     X = np.asarray(X, dtype=float)
     n_subj, n_visits = int(n_subj), int(n_visits)
@@ -46,13 +55,13 @@ def gee_dispersion_run(y, X, n_subj, n_visits, covariance='Independence', tol=1e
     for iterations in range(1, max_iter + 1):
         beta_new = beta_old + iter_I_inv @ iter_U
         mu = np.exp(X @ beta_new)
-        if covariance == 'Independence':
+        if covariance == "Independence":
             alpha = 0.0
             R = np.eye(n_visits)
-        elif covariance == 'Exchangeable':
+        elif covariance == "Exchangeable":
             pearson = (y - mu) / np.sqrt(mu)
             if phi_est:
-                phi = 1.0 / (np.sum(pearson ** 2) / max(n_obs - p, 1))
+                phi = 1.0 / (np.sum(pearson**2) / max(n_obs - p, 1))
             pair_sum = 0.0
             for s in range(n_subj):
                 sl = slice(s * n_visits, (s + 1) * n_visits)
@@ -61,7 +70,7 @@ def gee_dispersion_run(y, X, n_subj, n_visits, covariance='Independence', tol=1e
             alpha = phi * (pair_sum / (n_visits * (n_visits - 1))) / n_subj
             R = _exchangeable(alpha, n_visits)
         else:
-            raise ValueError(f'Unknown covariance structure: {covariance}')
+            raise ValueError(f"Unknown covariance structure: {covariance}")
         R_inv = _inv(R)
         iter_I = np.zeros((p, p), dtype=float)
         iter_U = np.zeros(p, dtype=float)
@@ -86,5 +95,12 @@ def gee_dispersion_run(y, X, n_subj, n_visits, covariance='Independence', tol=1e
         beta_old = beta_new
     sandwich = _sandwich(tmp5_blocks, residual_blocks, iter_I_inv)
     se_sandwich = np.sqrt(np.diag(sandwich))
-    return {'beta': beta_new, 'beta_se_model': se_model_trace[-1], 'beta_se_model_trace': np.vstack(se_model_trace),
-            'beta_se_sandwich': se_sandwich, 'alpha': alpha, 'phi': phi, 'iterations': iterations}
+    return {
+        "beta": beta_new,
+        "beta_se_model": se_model_trace[-1],
+        "beta_se_model_trace": np.vstack(se_model_trace),
+        "beta_se_sandwich": se_sandwich,
+        "alpha": alpha,
+        "phi": phi,
+        "iterations": iterations,
+    }

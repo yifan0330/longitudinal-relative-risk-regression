@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import nibabel as nib
@@ -29,7 +30,9 @@ from Sept21_pgee_logPoisson_dispersion_fn import (  # noqa: E402
     load_rdata,
 )
 
-BRAIN_MASK_PATH = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii")
+BRAIN_MASK_PATH = Path(
+    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii"
+)
 MNI152_PATH = Path("/well/nichols/users/kindalov/FMRIB/MNI152_T1_2mm_brain.nii.gz")
 NAMES_COVS = [
     "Intercept",
@@ -61,7 +64,9 @@ def read_nifti(path: str | Path) -> np.ndarray:
 
 
 def r_linear_get(data: np.ndarray, ids_1based: np.ndarray) -> np.ndarray:
-    return np.asarray(data).ravel(order="F")[np.asarray(ids_1based, dtype=int).reshape(-1) - 1]
+    return np.asarray(data).ravel(order="F")[
+        np.asarray(ids_1based, dtype=int).reshape(-1) - 1
+    ]
 
 
 def summary_PK(summary_vec: Any, quantiles_vec: Sequence[float]) -> dict[str, Any]:
@@ -80,7 +85,9 @@ def summary_PK(summary_vec: Any, quantiles_vec: Sequence[float]) -> dict[str, An
         }
     else:
         output_list = {
-            "quantiles": pd.Series(np.quantile(values, quantiles_vec), index=list(quantiles_vec)),
+            "quantiles": pd.Series(
+                np.quantile(values, quantiles_vec), index=list(quantiles_vec)
+            ),
             "mean": float(np.mean(values)),
             "sd": float(np.std(values, ddof=1)) if values.size > 1 else np.nan,
             "zeroes": int(np.sum(values == 0)),
@@ -93,7 +100,16 @@ def r_summary(values: Any) -> pd.Series:
     arr = np.asarray(values, dtype=float).reshape(-1)
     arr = arr[np.isfinite(arr)]
     if arr.size == 0:
-        out = pd.Series({"Min.": np.nan, "1st Qu.": np.nan, "Median": np.nan, "Mean": np.nan, "3rd Qu.": np.nan, "Max.": np.nan})
+        out = pd.Series(
+            {
+                "Min.": np.nan,
+                "1st Qu.": np.nan,
+                "Median": np.nan,
+                "Mean": np.nan,
+                "3rd Qu.": np.nan,
+                "Max.": np.nan,
+            }
+        )
     else:
         out = pd.Series(
             {
@@ -155,7 +171,9 @@ def _as_numeric_array(value: Any) -> np.ndarray:
     return np.asarray(value, dtype=float)
 
 
-def _se_trace_ratios(output_all: Sequence[Any], expected_len: int, n_cov: int = 9) -> tuple[np.ndarray, np.ndarray]:
+def _se_trace_ratios(
+    output_all: Sequence[Any], expected_len: int, n_cov: int = 9
+) -> tuple[np.ndarray, np.ndarray]:
     ratios = np.full((n_cov, len(output_all)), np.nan)
     iterations = np.full(len(output_all), np.nan)
     for idx, item in enumerate(output_all):
@@ -166,7 +184,11 @@ def _se_trace_ratios(output_all: Sequence[Any], expected_len: int, n_cov: int = 
             trace = _as_numeric_array(_field(item, "beta_se_model_trace", 3))
             if trace.size == 0:
                 continue
-            trace = trace.reshape((-1, n_cov), order="F") if trace.ndim == 1 else np.asarray(trace, dtype=float)
+            trace = (
+                trace.reshape((-1, n_cov), order="F")
+                if trace.ndim == 1
+                else np.asarray(trace, dtype=float)
+            )
             if trace.shape[1] != n_cov and trace.shape[0] == n_cov:
                 trace = trace.T
             if trace.shape[1] != n_cov:
@@ -174,7 +196,9 @@ def _se_trace_ratios(output_all: Sequence[Any], expected_len: int, n_cov: int = 
             first = trace[0, :]
             ratio_trace = trace / first
             ratios[:, idx] = ratio_trace[-1, :]
-            iterations[idx] = np.asarray(_field(item, "iterations", 7), dtype=float).reshape(-1)[0]
+            iterations[idx] = np.asarray(
+                _field(item, "iterations", 7), dtype=float
+            ).reshape(-1)[0]
         except Exception:
             continue
     return ratios, iterations
@@ -221,7 +245,12 @@ def _histogram_se_ratios(se_ratios_gee: np.ndarray, se_ratios_pgee: np.ndarray) 
     )
     out = GEEDIR / "plots" / "geeVSpgee" / "Sept_SEratios_sex_histogram.pdf"
     out.parent.mkdir(parents=True, exist_ok=True)
-    grid = sns.FacetGrid(dat_SEratio.replace([np.inf, -np.inf], np.nan).dropna(), col="group", height=5, aspect=1)
+    grid = sns.FacetGrid(
+        dat_SEratio.replace([np.inf, -np.inf], np.nan).dropna(),
+        col="group",
+        height=5,
+        aspect=1,
+    )
     grid.map_dataframe(sns.histplot, x="x", bins=30)
     grid.set(xlim=(0, 10), xlabel="BEC(beta[6])")
     grid.tight_layout()
@@ -229,12 +258,27 @@ def _histogram_se_ratios(se_ratios_gee: np.ndarray, se_ratios_pgee: np.ndarray) 
     plt.close("all")
 
 
-def _density_scatter(x: np.ndarray, y: np.ndarray, out: Path, xlabel: str, ylabel: str, limits: tuple[float, float]) -> None:
+def _density_scatter(
+    x: np.ndarray,
+    y: np.ndarray,
+    out: Path,
+    xlabel: str,
+    ylabel: str,
+    limits: tuple[float, float],
+) -> None:
     df = pd.DataFrame({"x": x, "y": y}).replace([np.inf, -np.inf], np.nan).dropna()
     out.parent.mkdir(parents=True, exist_ok=True)
     plt.figure(figsize=(7, 7))
     if not df.empty:
-        plt.hexbin(df["x"], df["y"], gridsize=100, cmap="viridis", mincnt=1, bins="log", alpha=0.75)
+        plt.hexbin(
+            df["x"],
+            df["y"],
+            gridsize=100,
+            cmap="viridis",
+            mincnt=1,
+            bins="log",
+            alpha=0.75,
+        )
         plt.colorbar(label="log10(count)")
     lo, hi = limits
     plt.plot([lo, hi], [lo, hi], "k--", linewidth=0.5)
@@ -248,14 +292,20 @@ def _density_scatter(x: np.ndarray, y: np.ndarray, out: Path, xlabel: str, ylabe
     plt.close()
 
 
-def _analyse_se_ratios(label: str, result_path: Path, expected_len: int, threshold: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _analyse_se_ratios(
+    label: str, result_path: Path, expected_len: int, threshold: float
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     print(f"# {label}")
     output_all = _load_output_all(result_path)
     se_trace_last_iter, iters = _se_trace_ratios(output_all, expected_len=expected_len)
     for i, cov in enumerate(NAMES_COVS):
         print(cov)
         summary_PK(se_trace_last_iter[i, :], QUANTILES_FULL)
-    _diagnostic_hist(se_trace_last_iter[5, :], f"SE ratio: Sex", GEEDIR / "plots" / "geeVSpgee" / f"{label}_SEratio_sex_histogram.pdf")
+    _diagnostic_hist(
+        se_trace_last_iter[5, :],
+        f"SE ratio: Sex",
+        GEEDIR / "plots" / "geeVSpgee" / f"{label}_SEratio_sex_histogram.pdf",
+    )
     cov_flags = _covariate_flags(se_trace_last_iter, threshold=threshold)
     all_flags = np.logical_and.reduce(cov_flags)
     print(np.where(all_flags)[0] + 1)
@@ -288,7 +338,9 @@ def main() -> None:
         threshold=10,
     )
 
-    sexM_est = read_nifti(GEEDIR / "results_July_gee_interaction" / f"estimate_{NAMES_COVS[5]}_GEE")
+    sexM_est = read_nifti(
+        GEEDIR / "results_July_gee_interaction" / f"estimate_{NAMES_COVS[5]}_GEE"
+    )
     summary_PK(r_linear_get(sexM_est, voxel_IDs), [0, 0.25, 0.5, 0.75, 0.99, 1])
     exclude = np.where(se_ratios_GEE[3, :] > 10)[0]
     keep_voxels = np.delete(voxel_IDs, exclude)
@@ -300,7 +352,9 @@ def main() -> None:
         print(float(np.nanstd(np.delete(se_ratios_GEE[i, :], idx_temp_gee), ddof=1)))
     _ = read_nifti(GEEDIR / "results_July_gee_interaction" / f"se_{NAMES_COVS[5]}_GEE")
     summary_PK(r_linear_get(sexM_est, voxel_IDs), [0, 0.25, 0.5, 0.75, 0.99, 1])
-    _diagnostic_hist(np.delete(se_ratios_GEE[5, :], idx_temp_gee), "SE ratio: Sex, filtered")
+    _diagnostic_hist(
+        np.delete(se_ratios_GEE[5, :], idx_temp_gee), "SE ratio: Sex, filtered"
+    )
     NA_ids_gee = np.where(~np.isfinite(se_ratios_GEE[5, :]))[0] + 1
     print(f"NA_ids_gee: {len(NA_ids_gee)}")
     r_summary(iters_gee)
@@ -322,8 +376,12 @@ def main() -> None:
 
     _histogram_se_ratios(se_ratios_GEE, se_ratios_PGEE)
 
-    z_sex_gee = read_nifti(GEEDIR / "results_July_gee_interaction" / f"zscore_{NAMES_COVS[5]}_GEE.nii.gz")
-    z_sex_pgee = read_nifti(GEEDIR / "results_Sept_pgee_interaction" / f"zscore_{NAMES_COVS[5]}_GEE.nii.gz")
+    z_sex_gee = read_nifti(
+        GEEDIR / "results_July_gee_interaction" / f"zscore_{NAMES_COVS[5]}_GEE.nii.gz"
+    )
+    z_sex_pgee = read_nifti(
+        GEEDIR / "results_Sept_pgee_interaction" / f"zscore_{NAMES_COVS[5]}_GEE.nii.gz"
+    )
     _density_scatter(
         r_linear_get(z_sex_gee, voxel_IDs[idx_temp_gee]),
         r_linear_get(z_sex_pgee, voxel_IDs[idx_temp_gee]),

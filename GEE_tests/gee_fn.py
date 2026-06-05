@@ -59,14 +59,16 @@ def _poisson_alpha(y, mu, n_subj, n_visits, covariance):
     if covariance == "ar1":
         res_temp = np.zeros((n_visits, n_visits), dtype=float)
         for s in range(n_subj):
-            r = res[s * n_visits:(s + 1) * n_visits].reshape(-1, 1)
+            r = res[s * n_visits : (s + 1) * n_visits].reshape(-1, 1)
             res_temp += r @ r.T
-        alpha = sum(res_temp[i, i + 1] for i in range(n_visits - 1)) / ((n_visits - 1) * n_subj)
+        alpha = sum(res_temp[i, i + 1] for i in range(n_visits - 1)) / (
+            (n_visits - 1) * n_subj
+        )
         return float(alpha), _ar1_cor(n_visits, alpha)
     if covariance == "exchangeable":
         total = 0.0
         for s in range(n_subj):
-            r = res[s * n_visits:(s + 1) * n_visits].reshape(-1, 1)
+            r = res[s * n_visits : (s + 1) * n_visits].reshape(-1, 1)
             rr = r @ r.T
             total += rr.sum() - np.trace(rr)
         alpha = total / (n_visits * (n_visits - 1) * n_subj)
@@ -80,13 +82,20 @@ def _finish_iter(beta_old, beta_new, tol):
     return bool(np.all(np.abs(beta_old.reshape(-1, 1) - beta_new.reshape(-1, 1)) < tol))
 
 
-def gee_run(y, X, n_subj, n_visits, covariance="Independence", tol=1e-3, max_iter=10, verbose=True):
+def gee_run(
+    y,
+    X,
+    n_subj,
+    n_visits,
+    covariance="Independence",
+    tol=1e-3,
+    max_iter=10,
+    verbose=True,
+):
     y = _as_col(y)
     X = _as_matrix(X)
     n_subj, n_visits, max_iter = int(n_subj), int(n_visits), int(max_iter)
     P = X.shape[1]
-    n_obs = n_subj * n_visits
-
     beta_old = np.r_[np.log(np.mean(y)), np.zeros(P - 1)].reshape(-1, 1)
     mu = np.exp(X @ beta_old)
     I = X.T @ np.diagflat(mu) @ X
@@ -149,4 +158,6 @@ def gee_run(y, X, n_subj, n_visits, covariance="Independence", tol=1e-3, max_ite
 
 
 if __name__ == "__main__":
-    raise SystemExit("Import gee_run() from this module; it is not a command-line runner.")
+    raise SystemExit(
+        "Import gee_run() from this module; it is not a command-line runner."
+    )
