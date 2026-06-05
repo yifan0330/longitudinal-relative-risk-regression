@@ -8,6 +8,7 @@ import sys
 import time
 from multiprocessing import Pool
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 import nibabel as nib
 import numpy as np
@@ -96,9 +97,9 @@ def describe(x, name):
     )
 
 
-TEMPDIR = "/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp"
-IMAGEDIR_VIS1 = "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis"
-IMAGEDIR_VIS2 = "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis"
+TEMPDIR = str(PROJECT_ROOT / 'prelim/temp')
+IMAGEDIR_VIS1 = str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw1vis')
+IMAGEDIR_VIS2 = str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw2vis')
 
 
 def main():

@@ -8,6 +8,7 @@ import sys
 import time
 from multiprocessing import Pool
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 import nibabel as nib
 import numpy as np
@@ -95,8 +96,8 @@ def binarize(data, threshold=0.5):
 
 
 N_CORES = 8
-TEMPDIR = "/well/nichols/users/kindalov/FMRIB/Longitudinal/Basel_data/"
-GEEDIR = "/well/nichols/users/kindalov/FMRIB/Longitudinal/Basel_data/GEE/"
+TEMPDIR = str(PROJECT_ROOT / 'Basel_data/')
+GEEDIR = str(PROJECT_ROOT / 'Basel_data/GEE/')
 COV_FILE = "AgeSexMStype_complete.dat"
 FORMULA = "y ~ AGE + SEX + DISCRS"
 OUT_SUBDIR = "temp_MS"

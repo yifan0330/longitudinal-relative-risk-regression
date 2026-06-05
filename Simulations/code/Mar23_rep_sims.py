@@ -5,6 +5,7 @@ from __future__ import annotations
 import pickle
 import sys
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,7 +23,7 @@ from Mar23_PGEE_source import geefirth
 from Sept21_pgee_logPoisson_dispersion_fn import gee_penalty_run
 from source_simdata import gen_dataPP
 
-GEEDIR = "/well/nichols/users/kindalov/FMRIB/Longitudinal/PGEE_Mondol"
+GEEDIR = str(PROJECT_ROOT / 'PGEE_Mondol')
 
 
 def _model_matrix(df: pd.DataFrame) -> np.ndarray:

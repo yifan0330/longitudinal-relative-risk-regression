@@ -3,16 +3,17 @@ from __future__ import annotations
 
 import pickle
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 import matplotlib.pyplot as plt
 import nibabel as nib
 import numpy as np
 import pandas as pd
 
-TEMPDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp")
-GEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/Apr2021_GEE")
-IMAGEDIR_VIS1 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis")
-IMAGEDIR_VIS2 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis")
+TEMPDIR = PROJECT_ROOT / 'prelim/temp'
+GEEDIR = PROJECT_ROOT / 'Apr2021_GEE'
+IMAGEDIR_VIS1 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw1vis'
+IMAGEDIR_VIS2 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw2vis'
 
 
 def _read_pickle_or_rdata(path: Path) -> dict:
@@ -91,7 +92,7 @@ def _summary(values):
 def main():
     brain_img, brain_mask = _load_nifti(
         Path(
-            "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii"
+            str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii')
         )
     )
     _load_nifti(IMAGEDIR_VIS1 / "Apr2021_cleaned_empir_prob_mask.nii.gz")

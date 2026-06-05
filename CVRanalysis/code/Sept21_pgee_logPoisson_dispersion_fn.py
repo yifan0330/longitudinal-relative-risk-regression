@@ -14,6 +14,7 @@ import math
 import pickle
 from multiprocessing import Pool
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 from typing import Any
 
 import numpy as np
@@ -21,10 +22,10 @@ import pandas as pd
 import statsmodels.api as sm
 from scipy import linalg
 
-TEMPDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp")
-GEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/CVRanalysis")
-IMAGEDIR_VIS1 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis")
-IMAGEDIR_VIS2 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis")
+TEMPDIR = PROJECT_ROOT / 'prelim/temp'
+GEEDIR = PROJECT_ROOT / 'CVRanalysis'
+IMAGEDIR_VIS1 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw1vis'
+IMAGEDIR_VIS2 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw2vis'
 
 _COMPLETE_DF: pd.DataFrame | None = None
 _IDS: np.ndarray | None = None

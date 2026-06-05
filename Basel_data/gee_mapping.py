@@ -8,6 +8,7 @@ import sys
 import time
 from multiprocessing import Pool
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 import nibabel as nib
 import numpy as np
@@ -94,7 +95,7 @@ def binarize(data, threshold=0.5):
     return (np.asarray(data) >= threshold).astype(np.uint8)
 
 
-WORKDIR = "/well/nichols/users/kindalov/FMRIB/Longitudinal/Basel_data"
+WORKDIR = str(PROJECT_ROOT / 'Basel_data')
 
 
 def _extract(item, key, width):

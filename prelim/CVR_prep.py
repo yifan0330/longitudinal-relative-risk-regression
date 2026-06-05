@@ -8,6 +8,7 @@ import sys
 import time
 from multiprocessing import Pool
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 import nibabel as nib
 import numpy as np
@@ -96,7 +97,7 @@ def describe(x, name):
     )
 
 
-TEMPDIR = "/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp"
+TEMPDIR = str(PROJECT_ROOT / 'prelim/temp')
 
 
 def _col(df, name):
@@ -184,11 +185,11 @@ def whr(df, visit):
 
 def main():
     vis2 = read_table(
-        "/well/nichols/users/kindalov/FMRIB/Longitudinal/funpack/Vis2_CVR.tsv", sep="\t"
+        str(PROJECT_ROOT / 'funpack/Vis2_CVR.tsv'), sep="\t"
     )
     vis2 = vis2.rename(columns={vis2.columns[0]: "eid_34077"})
     vis3 = read_table(
-        "/well/nichols/users/kindalov/FMRIB/Longitudinal/funpack/Vis3_CVR.tsv", sep="\t"
+        str(PROJECT_ROOT / 'funpack/Vis3_CVR.tsv'), sep="\t"
     )
     vis3 = vis3.rename(columns={vis3.columns[0]: "eid_34077"})
     df = read_table(Path(TEMPDIR) / "df_visits_cleaned_Apr2021.dat").drop(
@@ -208,7 +209,7 @@ def main():
     dia3[(dia3.isna()) & (dia2 == 1)] = 1
     bp2, sys1 = bp_risk(dfv, 2, bpm2)
     bp3, sys2 = bp_risk(dfv, 3, bpm3)
-    apoe = read_table("/well/nichols/users/kindalov/ApoE_Extract/ApoE.dat")
+    apoe = read_table(str(PROJECT_ROOT.parent.parent / 'ApoE_Extract/ApoE.dat'))
     apoe["apoe_score"] = np.where(apoe["e3.e4"] == 1, 1, 0)
     apoe["apoe_score"] = np.where(apoe["e4.e4"] == 1, 2, apoe["apoe_score"])
     apoe = apoe.rename(columns={apoe.columns[2]: "eid_34077"})

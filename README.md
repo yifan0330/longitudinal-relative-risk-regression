@@ -35,7 +35,7 @@ Some cluster job scripts load `R/3.6.2-foss-2019b` because the original workflow
 
 ## Data and path assumptions
 
-Most scripts contain absolute paths under `/well/nichols/users/...` or `/gpfs3/well/nichols/users/...`. Before running on another machine, update the path constants near the top of the script you want to run, or run in an environment where those paths and data files exist.
+Most scripts resolve project inputs relative to the repository root. Sibling data directories are referenced relative to the repository parent, so the project can be moved between `/well` and `/gpfs3` locations without editing hard-coded user paths.
 
 Common inputs include:
 

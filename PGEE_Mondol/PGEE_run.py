@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import gc
-import pickle
 import sys
 from multiprocessing import Pool
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 import nibabel as nib  # kept as the Python equivalent of the original NIfTI dependency
 import numpy as np
 import pandas as pd
 from scipy.io import loadmat
+from data_io import load_array_data, save_pickle_data
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
@@ -19,39 +22,27 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from PGEE_source import geefirth
 
-TEMP_DIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp")
-GEE_DIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/PGEE_Mondol")
-IMAGEDIR_VIS1 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis")
-IMAGEDIR_VIS2 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis")
-OVERLAP_FILE = Path("/well/nichols/users/kindalov/FMRIB/bianca_1vis_2vis_overlap.txt")
+TEMP_DIR = PROJECT_ROOT / 'prelim/temp'
+GEE_DIR = PROJECT_ROOT / 'PGEE_Mondol'
+IMAGEDIR_VIS1 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw1vis'
+IMAGEDIR_VIS2 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw2vis'
+OVERLAP_FILE = PROJECT_ROOT.parent / 'bianca_1vis_2vis_overlap.txt'
 N_CORES = 8
 
 
 def _load_data_file(path: Path) -> dict:
-    """Load Python pickle/npz/MAT files from a historical .RData filename.
-
-    Native RData parsing is intentionally not implemented because this port does
-    not call R.  Convert legacy RData once to pickle/npz/MAT with the same object
-    names (lesions_vis1, lesions_vis2) before running this script.
-    """
+    """Load Python npz/MAT files from a historical data filename."""
+    data_error: Exception | None = None
     try:
-        with open(path, "rb") as fh:
-            obj = pickle.load(fh)
-        if isinstance(obj, dict):
-            return obj
-    except Exception:
-        pass
-    try:
-        loaded = np.load(path, allow_pickle=True)
-        return {k: loaded[k] for k in loaded.files}
-    except Exception:
-        pass
+        return load_array_data(path)
+    except Exception as first_error:
+        data_error = first_error
     try:
         return {k: v for k, v in loadmat(path).items() if not k.startswith("__")}
     except Exception as exc:
         raise RuntimeError(
-            f"Cannot load {path} without R; provide pickle, npz, or MAT data with the original filename"
-        ) from exc
+            f"Cannot load {path}; provide npz or MAT data with lesions_vis1 and lesions_vis2"
+        ) from data_error or exc
 
 
 def _read_ids() -> np.ndarray:
@@ -68,7 +59,7 @@ def _read_visits() -> pd.DataFrame:
 
 
 def _load_lesions(voxel_ids: np.ndarray | None = None):
-    data = _load_data_file(TEMP_DIR / "lesions_atleast6.RData")
+    data = _load_data_file(TEMP_DIR / "lesions_atleast6.npz")
     lesions_vis1 = np.asarray(data["lesions_vis1"])
     lesions_vis2 = np.asarray(data["lesions_vis2"])
     if voxel_ids is not None:
@@ -107,9 +98,7 @@ def _fit_one(args):
 
 
 def _save_exact(path: Path, obj) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "wb") as fh:
-        pickle.dump(obj, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    save_pickle_data(obj, path)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -149,7 +138,7 @@ def main(argv: list[str] | None = None) -> int:
         ]
         with Pool(processes=N_CORES) as pool:
             output = pool.map(_fit_one, tasks)
-        _save_exact(GEE_DIR / "temp_atleast6" / f"PGEE_NAs_{j}.RData", output)
+        _save_exact(GEE_DIR / "temp_atleast6" / f"PGEE_NAs_{j}.pkl", output)
         del output, lesions_vis1, lesions_vis2
         gc.collect()
     return 0

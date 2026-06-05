@@ -8,6 +8,7 @@ import sys
 import time
 from multiprocessing import Pool
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 import nibabel as nib
 import numpy as np
@@ -96,11 +97,11 @@ def describe(x, name):
     )
 
 
-TEMPDIR = "/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp"
-IMAGEDIR_VIS1 = "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis"
-IMAGEDIR_VIS2 = "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis"
+TEMPDIR = str(PROJECT_ROOT / 'prelim/temp')
+IMAGEDIR_VIS1 = str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw1vis')
+IMAGEDIR_VIS2 = str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw2vis')
 BRAIN_MASK = (
-    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii"
+    str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii')
 )
 
 
@@ -129,24 +130,24 @@ def all_subj(datafile, imagedir, voxel_ids):
 
 def build_cleaned_visits(ids):
     vis1 = read_table(
-        "/well/nichols/users/kindalov/FMRIB/Longitudinal/funpack/Vis0.tsv", sep="\t"
+        str(PROJECT_ROOT / 'funpack/Vis0.tsv'), sep="\t"
     ).rename(
         columns=lambda c: (
             "eid_34077"
             if c
             == read_table(
-                "/well/nichols/users/kindalov/FMRIB/Longitudinal/funpack/Vis0.tsv",
+                str(PROJECT_ROOT / 'funpack/Vis0.tsv'),
                 sep="\t",
             ).columns[0]
             else c
         )
     )
     vis2 = read_table(
-        "/well/nichols/users/kindalov/FMRIB/Longitudinal/funpack/Vis2.tsv", sep="\t"
+        str(PROJECT_ROOT / 'funpack/Vis2.tsv'), sep="\t"
     )
     vis2 = vis2.rename(columns={vis2.columns[0]: "eid_34077"})
     vis3 = read_table(
-        "/well/nichols/users/kindalov/FMRIB/Longitudinal/funpack/Vis3.tsv", sep="\t"
+        str(PROJECT_ROOT / 'funpack/Vis3.tsv'), sep="\t"
     )
     vis3 = vis3.rename(columns={vis3.columns[0]: "eid_34077"})
     bridge = read_table(
@@ -204,7 +205,7 @@ def main():
     brain, _ = load_nifti(BRAIN_MASK)
     subjects = (
         read_table(
-            "/well/nichols/users/kindalov/FMRIB/bianca_1vis_2vis_overlap_filenames_Apr2021.txt",
+            str(PROJECT_ROOT.parent / 'bianca_1vis_2vis_overlap_filenames_Apr2021.txt'),
             header=False,
         )
         .iloc[:, 0]

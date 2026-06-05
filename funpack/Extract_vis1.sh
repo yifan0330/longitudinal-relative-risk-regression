@@ -18,9 +18,13 @@
 . /etc/profile
 . ~/.bash_profile
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PROJECT_ROOT=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)
+cd "$PROJECT_ROOT"
+
 
 SMS=$UKB_SMS
-LongitudinalProj="/well/nichols/users/kindalov/FMRIB/Longitudinal/funpack"
+LongitudinalProj="funpack"
  
 funpack -v 25734 \
     -s "v25734 != na" \

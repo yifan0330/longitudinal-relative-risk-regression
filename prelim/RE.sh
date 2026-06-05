@@ -26,7 +26,11 @@ echo "*********************************"
 
 module load R/3.6.2-foss-2019b
 
-/usr/bin/time -v python /gpfs3/well/nichols/users/pra123/Longitudinal/prelim/RE_run.py
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PROJECT_ROOT=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)
+cd "$PROJECT_ROOT"
+
+/usr/bin/time -v python prelim/RE_run.py
 
 echo "*********************************"
 echo "$JOB_ID finished at: `date`"

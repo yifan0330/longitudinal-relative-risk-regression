@@ -2,38 +2,31 @@
 """Python translation of Exploratory.Rmd analysis chunks."""
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 import matplotlib.pyplot as plt
 import nibabel as nib
 import numpy as np
 import pandas as pd
+from data_io import load_array_data
 
-TEMPDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp")
-GEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/GEE_tests")
-PGEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/PGEE_Mondol")
-IMAGEDIR_VIS1 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis")
-IMAGEDIR_VIS2 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis")
+TEMPDIR = PROJECT_ROOT / 'prelim/temp'
+GEEDIR = PROJECT_ROOT / 'GEE_tests'
+PGEEDIR = PROJECT_ROOT / 'PGEE_Mondol'
+IMAGEDIR_VIS1 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw1vis'
+IMAGEDIR_VIS2 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw2vis'
 BRAIN_MASK = Path(
-    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii"
+    str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii')
 )
 NAMES_COVS = ["Intercept", "avg_age", "age_diff"]
 
 
 def load_rdata(path: Path) -> dict:
-    try:
-        import pyreadr  # type: ignore
-
-        return dict(pyreadr.read_r(str(path)))
-    except Exception as first_error:
-        try:
-            import rdata  # type: ignore
-
-            return dict(rdata.conversion.convert(rdata.parser.parse_file(path)))
-        except Exception as second_error:
-            raise RuntimeError(
-                f"Could not load {path}; install pyreadr or rdata"
-            ) from second_error or first_error
+    return load_array_data(path)
 
 
 def read_nifti(path: Path | str) -> np.ndarray:
@@ -158,7 +151,9 @@ def main() -> int:
     brain_mask = read_nifti(BRAIN_MASK)
     empir_prob_vis1 = read_nifti(IMAGEDIR_VIS1 / "empir_prob_mask.nii.gz")
     empir_prob_vis2 = read_nifti(IMAGEDIR_VIS2 / "empir_prob_mask.nii.gz")
-    lesions = load_rdata(TEMPDIR / "lesions_atleast6.RData")
+    lesions = load_array_data(
+        TEMPDIR / "lesions_atleast6.npz", required=("lesions_vis1", "lesions_vis2")
+    )
     lesions_vis1 = np.asarray(lesions["lesions_vis1"], dtype=float)
     lesions_vis2 = np.asarray(lesions["lesions_vis2"], dtype=float)
 

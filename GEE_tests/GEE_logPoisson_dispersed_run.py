@@ -3,47 +3,42 @@ from __future__ import annotations
 
 import argparse
 import math
-import pickle
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 
 import numpy as np
 import pandas as pd
+from data_io import load_array_data, load_pickle_data, save_pickle_data
 
-TEMPDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp")
-GEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/GEE_tests")
+TEMPDIR = PROJECT_ROOT / 'prelim/temp'
+GEEDIR = PROJECT_ROOT / 'GEE_tests'
 IMAGE_DIR_VIS1 = Path(
-    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis"
+    str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw1vis')
 )
 IMAGE_DIR_VIS2 = Path(
-    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis"
+    str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw2vis')
 )
-SUBJECT_FILE = Path("/well/nichols/users/kindalov/FMRIB/bianca_1vis_2vis_overlap.txt")
+SUBJECT_FILE = PROJECT_ROOT.parent / 'bianca_1vis_2vis_overlap.txt'
 
 
 def load_rdata(path: Path) -> dict:
-    if not path.exists():
-        raise FileNotFoundError(path)
-    try:
-        import pyreadr  # type: ignore
-    except ImportError as exc:
-        raise ImportError(
-            "Reading .RData requires pyreadr; install it or provide data in a Python-readable format."
-        ) from exc
-    return dict(pyreadr.read_r(str(path)))
+    return load_array_data(path)
 
 
 def save_output(obj, path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("wb") as f:
-        pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
+    save_pickle_data(obj, path)
 
 
 def load_output(path: Path):
-    with path.open("rb") as f:
-        return pickle.load(f)
+    return load_pickle_data(path)
 
 
 def read_table(path: Path, header="infer") -> pd.DataFrame:
@@ -74,10 +69,12 @@ def load_visits() -> pd.DataFrame:
 
 
 def load_lesions() -> tuple[np.ndarray, np.ndarray]:
-    data = load_rdata(TEMPDIR / "lesions_atleast6.RData")
+    data = load_array_data(
+        TEMPDIR / "lesions_atleast6.npz", required=("lesions_vis1", "lesions_vis2")
+    )
     if "lesions_vis1" not in data or "lesions_vis2" not in data:
         raise KeyError(
-            "lesions_atleast6.RData must contain lesions_vis1 and lesions_vis2"
+            "lesions_atleast6.npz must contain lesions_vis1 and lesions_vis2"
         )
     return np.asarray(data["lesions_vis1"], dtype=float), np.asarray(
         data["lesions_vis2"], dtype=float
@@ -195,7 +192,7 @@ def main() -> int:
         output,
         GEEDIR
         / "temp_dispersed_poisson_sexM_exch_geePK_max25"
-        / f"GEE_subset_{args.j}.RData",
+        / f"GEE_subset_{args.j}.pkl",
     )
     return 0
 

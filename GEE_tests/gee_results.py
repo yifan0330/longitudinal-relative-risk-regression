@@ -2,17 +2,21 @@
 from __future__ import annotations
 
 import math
-import pickle
+import sys
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 import nibabel as nib
 import numpy as np
 import pandas as pd
+from data_io import load_array_data, load_pickle_data, save_pickle_data
 
-TEMPDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp")
-GEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/GEE_tests")
+TEMPDIR = PROJECT_ROOT / 'prelim/temp'
+GEEDIR = PROJECT_ROOT / 'GEE_tests'
 BRAIN_MASK_FILE = Path(
-    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii"
+    str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii')
 )
 RESULT_IN_DIR = GEEDIR / "temp_penalty_poisson_sexM_exch_geePK_max25"
 RESULT_OUT_DIR = GEEDIR / "results_penalty_poisson_sexM_exch_geePK_max25"
@@ -25,18 +29,11 @@ def read_table(path: Path, header="infer") -> pd.DataFrame:
 
 
 def load_rdata(path: Path) -> dict:
-    if not path.exists():
-        raise FileNotFoundError(path)
-    try:
-        import pyreadr  # type: ignore
-    except ImportError as exc:
-        raise ImportError("Reading .RData requires pyreadr.") from exc
-    return dict(pyreadr.read_r(str(path)))
+    return load_array_data(path)
 
 
 def load_output(path: Path):
-    with path.open("rb") as f:
-        return pickle.load(f)
+    return load_pickle_data(path)
 
 
 def summarize(values) -> None:
@@ -88,7 +85,9 @@ def main() -> int:
 
     subset_size = 1000
     lesions_vis1 = np.asarray(
-        load_rdata(TEMPDIR / "lesions_atleast6.RData")["lesions_vis1"]
+        load_array_data(
+            TEMPDIR / "lesions_atleast6.npz", required=("lesions_vis1",)
+        )["lesions_vis1"]
     )
     n_subsets = math.ceil(lesions_vis1.shape[0] / subset_size)
     print(n_subsets)
@@ -96,7 +95,7 @@ def main() -> int:
     for j in range(1, n_subsets + 1):
         print(j)
         subset_idx = subset_indices(lesions_vis1.shape[0], subset_size, j)
-        output = load_output(RESULT_IN_DIR / f"GEE_subset_{j}.RData")
+        output = load_output(RESULT_IN_DIR / f"GEE_subset_{j}.pkl")
         for k, item in enumerate(output):
             row = subset_idx[k]
             if isinstance(item, dict):
@@ -140,19 +139,17 @@ def main() -> int:
     write_nifti(img, RESULT_OUT_DIR / "iterations_GEE")
 
     RESULT_OUT_DIR.mkdir(parents=True, exist_ok=True)
-    with (RESULT_OUT_DIR / "results_exch_GEE.Rdata").open("wb") as f:
-        pickle.dump(
-            {
-                "estimates": estimates,
-                "stderror": stderror,
-                "zscores": zscores,
-                "alpha": alpha,
-                "iterations": iterations,
-                "output_all": output_all,
-            },
-            f,
-            protocol=pickle.HIGHEST_PROTOCOL,
-        )
+    save_pickle_data(
+        {
+            "estimates": estimates,
+            "stderror": stderror,
+            "zscores": zscores,
+            "alpha": alpha,
+            "iterations": iterations,
+            "output_all": output_all,
+        },
+        RESULT_OUT_DIR / "results_exch_GEE.pkl",
+    )
     return 0
 
 

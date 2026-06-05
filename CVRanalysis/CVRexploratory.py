@@ -10,6 +10,7 @@ from __future__ import annotations
 import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from typing import Any
 
 import matplotlib
@@ -31,9 +32,9 @@ from Sept21_pgee_logPoisson_dispersion_fn import (  # noqa: E402
 )
 
 BRAIN_MASK_PATH = Path(
-    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii"
+    str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii')
 )
-MNI152_PATH = Path("/well/nichols/users/kindalov/FMRIB/MNI152_T1_2mm_brain.nii.gz")
+MNI152_PATH = PROJECT_ROOT.parent / 'MNI152_T1_2mm_brain.nii.gz'
 NAMES_COVS = [
     "Intercept",
     "baseAge",

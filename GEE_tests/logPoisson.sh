@@ -26,7 +26,11 @@ echo "*********************************"
 
 module load R/3.6.2-foss-2019b
 
-/usr/bin/time -v python /gpfs3/well/nichols/users/pra123/Longitudinal/GEE_tests/GEE_logPoisson_dispersed_run.py 1 $SGE_TASK_ID
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PROJECT_ROOT=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)
+cd "$PROJECT_ROOT"
+
+/usr/bin/time -v python GEE_tests/GEE_logPoisson_dispersed_run.py 1 $SGE_TASK_ID
 
 
 echo "*********************************"

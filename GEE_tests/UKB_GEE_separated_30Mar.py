@@ -2,13 +2,20 @@
 """Python translation of UKB_GEE_separated_30Mar.Rmd analysis chunks."""
 from __future__ import annotations
 
-import pickle
+import sys
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 
 import matplotlib.pyplot as plt
 import nibabel as nib
 import numpy as np
 import pandas as pd
+from data_io import load_pickle_data
 from GEE_logPoisson_run import (
     GEEDIR,
     TEMPDIR,
@@ -35,18 +42,7 @@ def read_nifti(path: Path | str) -> np.ndarray:
 
 
 def load_output(path: Path):
-    try:
-        with path.open("rb") as f:
-            return pickle.load(f)
-    except Exception:
-        try:
-            import pyreadr  # type: ignore
-
-            return dict(pyreadr.read_r(str(path)))
-        except Exception as exc:
-            raise RuntimeError(
-                f"Could not read {path}; nested RData may require conversion"
-            ) from exc
+    return load_pickle_data(path)
 
 
 def load_voxel_ids() -> np.ndarray:
@@ -192,7 +188,7 @@ def main() -> int:
     print(pd.Series(dvrg_idx).value_counts())
 
     summarize_by_separation(RESULT_GEE, dvrg_idx, voxel_ids, "GEE")
-    output_all = load_output(RESULT_GEE / "results_exch_GEE.Rdata").get(
+    output_all = load_output(RESULT_GEE / "results_exch_GEE.pkl").get(
         "output_all", []
     )
     last = se_trace_last(output_all, expected_len=(6, 8))
@@ -209,7 +205,7 @@ def main() -> int:
     )
 
     summarize_by_separation(RESULT_PGEE, dvrg_idx, voxel_ids, "pGEE")
-    output_all_p = load_output(RESULT_PGEE / "results_exch_GEE.Rdata").get(
+    output_all_p = load_output(RESULT_PGEE / "results_exch_GEE.pkl").get(
         "output_all", []
     )
     last_p = se_trace_last(output_all_p, expected_len=(8, 9))

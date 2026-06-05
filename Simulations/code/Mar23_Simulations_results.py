@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 from typing import Any
 
 import numpy as np
@@ -10,7 +11,7 @@ import pandas as pd
 import Simulations_results as base
 
 GEEDIR = Path(
-    "/well/nichols/users/kindalov/FMRIB/Longitudinal/Simulations/Mar23_results"
+    str(PROJECT_ROOT / 'Simulations/Mar23_results')
 )
 BETA = np.array([-4.0, 1.6, 0.2])
 ALPHAS = np.array([0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8])

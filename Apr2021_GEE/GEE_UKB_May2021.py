@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pickle
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from typing import Any, Iterable
 
 import matplotlib.pyplot as plt
@@ -13,14 +14,14 @@ import pandas as pd
 import seaborn as sns
 from scipy.stats import norm
 
-TEMPDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp")
-GEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/Apr2021_GEE")
-IMAGEDIR_VIS1 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis")
-IMAGEDIR_VIS2 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis")
+TEMPDIR = PROJECT_ROOT / 'prelim/temp'
+GEEDIR = PROJECT_ROOT / 'Apr2021_GEE'
+IMAGEDIR_VIS1 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw1vis'
+IMAGEDIR_VIS2 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw2vis'
 BRAIN_MASK_PATH = Path(
-    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii"
+    str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii')
 )
-MNI152_PATH = Path("/well/nichols/users/kindalov/FMRIB/MNI152_T1_2mm_brain.nii.gz")
+MNI152_PATH = PROJECT_ROOT.parent / 'MNI152_T1_2mm_brain.nii.gz'
 
 NAMES_COVS = ["Intercept", "baseAge", "ageDiff", "sexM", "headsize", "ageBYsexM"]
 NAMES_COVS_PLOTS = [

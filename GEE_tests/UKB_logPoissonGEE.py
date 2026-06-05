@@ -2,14 +2,21 @@
 """Python translation of UKB_logPoissonGEE.Rmd analysis chunks."""
 from __future__ import annotations
 
-import pickle
+import sys
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 
 import matplotlib.pyplot as plt
 import nibabel as nib
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
+from data_io import load_pickle_data
 from gee_logPoisson_dispersion_fn import gee_dispersion_run
 from gee_logPoisson_fn import gee_run
 from gee_logPoisson_penalty_fn import gee_penalty_run
@@ -22,11 +29,11 @@ from GEE_logPoisson_run import (
     load_visits,
 )
 
-PGEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/PGEE_Mondol")
-IMAGEDIR_VIS1 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis")
-IMAGEDIR_VIS2 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis")
+PGEEDIR = PROJECT_ROOT / 'PGEE_Mondol'
+IMAGEDIR_VIS1 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw1vis'
+IMAGEDIR_VIS2 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw2vis'
 BRAIN_MASK = Path(
-    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii"
+    str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii')
 )
 NAMES_COVS = ["Intercept", "avg_age", "age_diff", "sexM"]
 
@@ -43,18 +50,7 @@ def read_nifti(path: Path | str) -> np.ndarray:
 
 
 def load_output(path: Path):
-    try:
-        with path.open("rb") as f:
-            return pickle.load(f)
-    except Exception:
-        try:
-            import pyreadr  # type: ignore
-
-            return dict(pyreadr.read_r(str(path)))
-        except Exception as exc:
-            raise RuntimeError(
-                f"Could not load nested result file {path}; convert it with pyreadr/rdata support"
-            ) from exc
+    return load_pickle_data(path)
 
 
 def load_voxel_ids() -> np.ndarray:
@@ -263,7 +259,7 @@ def main() -> int:
     intercept_potential = np.where(flat_values(se_intercept, voxel_ids) > 6.92)[0]
     print(len(intercept_potential))
     output_all = load_output(
-        GEEDIR / "results_poisson_sexM_exch_geePK" / "results_exch_GEE.Rdata"
+        GEEDIR / "results_poisson_sexM_exch_geePK" / "results_exch_GEE.pkl"
     ).get("output_all", [])
     if len(intercept_potential):
         print(output_all[intercept_potential[0]])
@@ -368,7 +364,7 @@ def main() -> int:
     print(np.intersect1d(np.where(sex_separated)[0], idx_SEratio))
 
     output_all_max25 = load_output(
-        GEEDIR / "results_poisson_sexM_exch_geePK_max25" / "results_exch_GEE.Rdata"
+        GEEDIR / "results_poisson_sexM_exch_geePK_max25" / "results_exch_GEE.pkl"
     ).get("output_all", [])
     last_model = se_trace_last(
         output_all_max25, key="beta_se_model_trace", expected_len=(8, 9)

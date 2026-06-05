@@ -21,11 +21,15 @@ echo "*********************************"
 
 module load R/3.6.2-foss-2019b
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PROJECT_ROOT=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)
+cd "$PROJECT_ROOT"
+
 allN=('25' '50' '75' '100' '500' '1000')
 arg=${allN[$SLURM_ARRAY_TASK_ID-1]}
 echo $arg
 
-/usr/bin/time -v python /gpfs3/well/nichols/users/pra123/Longitudinal/Simulations/code/Mar23_rep_sims.py -4 1.6 0.2 $arg 4 0.2 0.4 1000 3 /well/nichols/users/kindalov/FMRIB/Longitudinal/Simulations/Mar23_results/test_N_${SLURM_ARRAY_TASK_ID}.RData
+/usr/bin/time -v python Simulations/code/Mar23_rep_sims.py -4 1.6 0.2 $arg 4 0.2 0.4 1000 3 Simulations/Mar23_results/test_N_${SLURM_ARRAY_TASK_ID}.RData
 
 
 echo "*********************************"

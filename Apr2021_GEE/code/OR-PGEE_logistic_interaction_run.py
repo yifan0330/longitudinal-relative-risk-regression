@@ -9,14 +9,15 @@ import sys
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 import numpy as np
 import pandas as pd
 
-TEMPDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp")
-GEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/Apr2021_GEE")
-IMAGEDIR_VIS1 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis")
-IMAGEDIR_VIS2 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis")
+TEMPDIR = PROJECT_ROOT / 'prelim/temp'
+GEEDIR = PROJECT_ROOT / 'Apr2021_GEE'
+IMAGEDIR_VIS1 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw1vis'
+IMAGEDIR_VIS2 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw2vis'
 
 
 def _read_rdata(path: Path) -> dict:
@@ -95,7 +96,7 @@ def _prepare_cleaned_visits() -> tuple[pd.DataFrame, np.ndarray]:
 
 def _prepare_prior_visits() -> tuple[pd.DataFrame, np.ndarray]:
     subjects = pd.read_csv(
-        "/well/nichols/users/kindalov/FMRIB/bianca_1vis_2vis_overlap_filenames_Apr2021.txt",
+        str(PROJECT_ROOT.parent / 'bianca_1vis_2vis_overlap_filenames_Apr2021.txt'),
         header=None,
         sep=r"\s+",
         engine="python",

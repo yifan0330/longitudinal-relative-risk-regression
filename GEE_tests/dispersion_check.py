@@ -2,15 +2,22 @@
 """Python translation of dispersion_check.Rmd analysis chunks."""
 from __future__ import annotations
 
-import pickle
+import sys
 import time
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 
 import matplotlib.pyplot as plt
 import nibabel as nib
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
+from data_io import load_pickle_data
 from GEE_logPoisson_dispersed_run import (
     GEEDIR,
     TEMPDIR,
@@ -26,11 +33,11 @@ from gee_logPoisson_dispersion_fn import gee_dispersion_run
 from gee_logPoisson_fn import gee_run
 from gee_logPoisson_penalty_fn import gee_penalty_run
 
-PGEEDIR = Path("/well/nichols/users/kindalov/FMRIB/Longitudinal/PGEE_Mondol")
-IMAGEDIR_VIS1 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis")
-IMAGEDIR_VIS2 = Path("/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis")
+PGEEDIR = PROJECT_ROOT / 'PGEE_Mondol'
+IMAGEDIR_VIS1 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw1vis'
+IMAGEDIR_VIS2 = PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw2vis'
 BRAIN_MASK = Path(
-    "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii"
+    str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm/MNI152_T1_2mm_brain_mask.nii')
 )
 NAMES_COVS = ["Intercept", "avg_age", "age_diff", "sexM"]
 RESULT_DIR = GEEDIR / "results_poisson_sexM_exch_geePK_max25"
@@ -49,18 +56,7 @@ def read_nifti(path: Path | str) -> np.ndarray:
 
 
 def load_output(path: Path):
-    try:
-        with path.open("rb") as f:
-            return pickle.load(f)
-    except Exception:
-        try:
-            import pyreadr  # type: ignore
-
-            return dict(pyreadr.read_r(str(path)))
-        except Exception as exc:
-            raise RuntimeError(
-                f"Could not load nested result file {path}; convert it with pyreadr/rdata support"
-            ) from exc
+    return load_pickle_data(path)
 
 
 def load_voxel_ids() -> np.ndarray:
@@ -188,7 +184,7 @@ def refit_subset(subset_idx, ids, df_visits, label):
         lambda i: fit_gee(i, subset_idx, ids, df_visits), len(subset_idx), 1
     )
     print(time.time() - start)
-    save_output(output, TEMP_DIR / f"{label}.RData")
+    save_output(output, TEMP_DIR / f"{label}.pkl")
     return output
 
 
@@ -207,7 +203,7 @@ def main() -> int:
     empir_prob_vis1 = read_nifti(IMAGEDIR_VIS1 / "empir_prob_mask.nii.gz")
     empir_prob_vis2 = read_nifti(IMAGEDIR_VIS2 / "empir_prob_mask.nii.gz")
 
-    output_all = load_output(RESULT_DIR / "results_exch_GEE.Rdata").get(
+    output_all = load_output(RESULT_DIR / "results_exch_GEE.pkl").get(
         "output_all", []
     )
     _, se_trace_last_iter = se_trace_last(
@@ -266,7 +262,7 @@ def main() -> int:
         except Exception as exc:
             print(f"statsmodels comparison failed: {exc}")
 
-    dispersed_file = TEMP_DIR / "dispersed.RData"
+    dispersed_file = TEMP_DIR / "dispersed.pkl"
     if dispersed_file.exists():
         output_dispersed = load_output(dispersed_file).get(
             "output_dispersed", load_output(dispersed_file)
@@ -287,7 +283,7 @@ def main() -> int:
         ]
         print(summary_PK(alpha, [0, 0.01, 0.25, 0.5, 0.75, 0.95, 0.99, 1]))
 
-    high_file = TEMP_DIR / "highSE.RData"
+    high_file = TEMP_DIR / "highSE.pkl"
     if high_file.exists():
         output_high = load_output(high_file).get(
             "output_highSE", load_output(high_file)

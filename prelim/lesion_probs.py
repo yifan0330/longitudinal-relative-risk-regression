@@ -3,11 +3,13 @@
 
 import gc
 import math
-import pickle
 import sys
 import time
 from multiprocessing import Pool
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 import nibabel as nib
 import numpy as np
@@ -15,6 +17,7 @@ import pandas as pd
 import scipy.stats as st
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+from data_io import load_array_data, save_pickle_data
 
 
 def read_table(path, header=True, sep=None):
@@ -63,22 +66,11 @@ def r_linear_get(arr, indices):
 
 
 def load_rdata(path):
-    path = str(path)
-    try:
-        import pyreadr
-
-        res = pyreadr.read_r(path)
-        return dict(res.items())
-    except Exception:
-        pass
-    with open(path, "rb") as fh:
-        return pickle.load(fh)
+    return load_array_data(path)
 
 
 def save_rdata(path, **objects):
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "wb") as fh:
-        pickle.dump(objects, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    save_pickle_data(objects, path)
 
 
 def binarize(data):
@@ -96,9 +88,9 @@ def describe(x, name):
     )
 
 
-TEMPDIR = "/well/nichols/users/kindalov/FMRIB/Longitudinal/prelim/temp"
-IMAGEDIR_VIS1 = "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw1vis"
-IMAGEDIR_VIS2 = "/well/nichols/users/kindalov/FMRIB/T2_lesions_MNI_2mm_subjsw2vis"
+TEMPDIR = str(PROJECT_ROOT / 'prelim/temp')
+IMAGEDIR_VIS1 = str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw1vis')
+IMAGEDIR_VIS2 = str(PROJECT_ROOT.parent / 'T2_lesions_MNI_2mm_subjsw2vis')
 N_CORES = 8
 
 
@@ -155,7 +147,7 @@ def main(argv=None):
     empir2, _ = load_nifti(Path(IMAGEDIR_VIS2) / "empir_prob_mask.nii.gz")
     ids = (
         read_table(
-            "/well/nichols/users/kindalov/FMRIB/bianca_1vis_2vis_overlap.txt",
+            str(PROJECT_ROOT.parent / 'bianca_1vis_2vis_overlap.txt'),
             header=False,
         )
         .iloc[:, 0]
@@ -167,7 +159,7 @@ def main(argv=None):
         .to_numpy()
         .ravel()
     )
-    obj = load_rdata(Path(TEMPDIR) / "lesions_nonzero.RData")
+    obj = load_rdata(Path(TEMPDIR) / "lesions_nonzero.npz")
     v1, v2 = np.asarray(obj["lesions_vis1"]), np.asarray(obj["lesions_vis2"])
     df = read_table(Path(TEMPDIR) / "df_visits.dat", header=True)[
         ["eid_8107", "age_vis2", "avg_age"]
@@ -178,7 +170,7 @@ def main(argv=None):
         if n_cores > 1
         else [fit_glmer(j) for j in jobs]
     )
-    save_rdata(Path(TEMPDIR) / "glmer_output_1000test.RData", output=output)
+    save_rdata(Path(TEMPDIR) / "glmer_output_1000test.pkl", output=output)
 
 
 if __name__ == "__main__":

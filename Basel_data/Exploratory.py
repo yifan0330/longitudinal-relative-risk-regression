@@ -8,6 +8,7 @@ import sys
 import time
 from multiprocessing import Pool
 from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 import nibabel as nib
 import numpy as np
@@ -94,8 +95,8 @@ def binarize(data, threshold=0.5):
     return (np.asarray(data) >= threshold).astype(np.uint8)
 
 
-IMAGEDIR = "/well/nichols/users/kfh142/data/Basel"
-WORKDIR = "/well/nichols/users/kindalov/FMRIB/Longitudinal/Basel_data/"
+IMAGEDIR = str(PROJECT_ROOT.parent.parent.parent / 'kfh142/data/Basel')
+WORKDIR = str(PROJECT_ROOT / 'Basel_data/')
 VISIT_FILES = {
     "bs": "bs/pd_segm_t2_to_tal.nii.gz",
     "y1": "y1/pd_segm_t2_to_tal.nii.gz",
