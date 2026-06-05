@@ -1,10 +1,13 @@
 # Python/R runtime artifacts
 __pycache__/
 *.py[cod]
+.venv/
 .ipynb_checkpoints/
 .Rhistory
 .RData
 .Rdata
+*.RData
+*.Rdata
 *.rds
 
 # Large analysis inputs, outputs, and generated reports
@@ -18,8 +21,12 @@ __pycache__/
 *.pdf
 *.png
 *.jpeg
+*.log
 
 # Common result/output directories in this project
 output/
 results*/
+*results*/
 temp/
+temp*/
+**/temp*/

@@ -19,10 +19,16 @@ The code is organised as analysis scripts rather than as an installable Python p
 
 ## Requirements
 
-Use Python 3 with the scientific Python stack:
+Use Python 3 with the scientific Python stack managed by `uv`:
 
 ```bash
-python -m pip install numpy pandas scipy statsmodels matplotlib seaborn nibabel pyreadr rdata
+uv sync
+```
+
+This creates a local `.venv` from `pyproject.toml` with the Python packages needed by the analysis scripts. Run commands through that environment, for example:
+
+```bash
+uv run python GEE_tests/GEE_run.py
 ```
 
 Some cluster job scripts load `R/3.6.2-foss-2019b` because the original workflow used R-era `.RData` files and HPC module environments.

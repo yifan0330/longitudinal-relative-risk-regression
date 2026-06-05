@@ -1,0 +1,20 @@
+[project]
+name = "longitudinal"
+version = "0.1.0"
+description = "Research code for longitudinal lesion modelling in neuroimaging data."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "matplotlib",
+    "nibabel",
+    "numpy",
+    "pandas",
+    "pyreadr",
+    "rdata",
+    "scipy",
+    "seaborn",
+    "statsmodels",
+]
+
+[tool.uv]
+package = false
