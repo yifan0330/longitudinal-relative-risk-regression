@@ -4,6 +4,8 @@ Research code for longitudinal lesion modelling in neuroimaging data. The reposi
 
 The code is organised as analysis scripts rather than as an installable Python package. Many scripts reproduce a specific cluster/HPC workflow and expect the original data layout.
 
+See `DEVELOPMENT_CONVENTIONS.md` for the code development conventions used to keep this research codebase clean, reproducible, and efficient.
+
 ## Repository layout
 
 | Path | Contents |
