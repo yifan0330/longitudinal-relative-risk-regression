@@ -1,0 +1,29 @@
+\begin{table}[htbp]
+\centering
+\caption{Number of significant voxels across predictors for OR-GEE and OR-PGEE estimates. Voxels with at least six individuals having a lesion across two visits were analyzed (19,801 voxels in the brain mask). A 5\% FDR correction and a fixed threshold of $|z| > 1.96$ were applied.}
+\label{tab:or-significant-voxels}
+\setlength{\tabcolsep}{7pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{lrrrr}
+\hline
+& \multicolumn{2}{c}{FDR-corrected voxels} & \multicolumn{2}{c}{$|z| > 1.96$} \\
+\cline{2-3}\cline{4-5}
+Predictor & OR-GEE & OR-PGEE & OR-GEE & OR-PGEE \\ 
+\hline
+Age (visit 1) & 9,312 & 11,090 & 10,696 & 12,079 \\
+Time difference & 89 & 470 & 2,176 & 3,765 \\
+CVR score (visit 1) & 4,028 & 6,581 & 6,805 & 8,786 \\
+CVR score difference & 211 & 1,444 & 2,321 & 4,224 \\
+Sex & 1,193 & 2,307 & 3,678 & 5,123 \\
+Head size & 1,794 & 3,210 & 4,387 & 5,949 \\
+Age (visit 1):Time difference & 49 & 391 & 1,343 & 3,061 \\
+Age (visit 1):Sex & 983 & 1,856 & 2,823 & 4,116 \\
+\hline
+\end{tabular}
+
+\vspace{0.4em}
+\begin{minipage}{0.94\linewidth}
+\footnotesize
+FDR: false discovery rate; GEE: generalized estimating equations; OR: odds ratio; PGEE: penalized generalized estimating equations.
+\end{minipage}
+\end{table}
