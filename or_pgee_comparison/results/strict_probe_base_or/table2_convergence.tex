@@ -1,0 +1,26 @@
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.15}
+\caption{Simulation convergence performance across simulation scenarios. The simulation parameters are set to $\beta = (\beta_0, \beta_b, \beta_c)^T = (-4, 1.6, 0.2)^T$, $N = 50$, $c = 0.2$, and $\alpha = 0.4$ in bold, and each row summarizes replications with one parameter altered and all other parameters fixed.}
+\begin{tabular}{ll|rrr|rrr|rrr}
+\hline
+\multicolumn{2}{c|}{Simulation setup} & \multicolumn{3}{c|}{RR-GEE} & \multicolumn{3}{c|}{RR-PGEE} & \multicolumn{3}{c}{OR-PGEE} \\
+Parameter & Value & \shortstack{BEC $>$ 10\\(non-conv.)} & \shortstack{Failed\\IRLS} & \shortstack{Non-conv.\\\& BEC $\leq$ 10} & \shortstack{BEC $>$ 10\\(non-conv.)} & \shortstack{Failed\\IRLS} & \shortstack{Non-conv.\\\& BEC $\leq$ 10} & \shortstack{BEC $>$ 10\\(non-conv.)} & Failed & \shortstack{Non-conv.\\\& BEC $\leq$ 10} \\
+\hline
+$\beta_0$ & \textbf{-4} & 7 (7) & 2 & 2 & 1 (0) & 0 & 0 & 0 (0) & 5 & 5 \\
+\hline
+$\beta_b$ & \textbf{1.6} & 7 (7) & 2 & 2 & 1 (0) & 0 & 0 & 0 (0) & 5 & 5 \\
+\hline
+$c$ & \textbf{0.2} & 7 (7) & 2 & 2 & 1 (0) & 0 & 0 & 0 (0) & 5 & 5 \\
+\hline
+$\alpha$ & \textbf{0.4} & 7 (7) & 2 & 2 & 1 (0) & 0 & 0 & 0 (0) & 5 & 5 \\
+\hline
+$N$ & \textbf{50} & 7 (7) & 2 & 2 & 1 (0) & 0 & 0 & 0 (0) & 5 & 5 \\
+\hline
+\end{tabular}
+\begin{flushleft}
+\footnotesize $\beta_0$ and $\beta_b$: true intercept and binary covariate regression coefficients; $c$: proportion of 1's in the binary covariate; $\alpha$: within-cluster correlation coefficient; $N$: number of subjects; BEC: boundary estimates criterion.
+\end{flushleft}
+\end{table}

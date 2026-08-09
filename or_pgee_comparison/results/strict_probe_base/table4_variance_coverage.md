@@ -1,0 +1,5 @@
+| scenario | scenario_type | method | n_used | mean_log_se | empirical_log_variance | mean_ci_width_rr | coverage | coverage_n |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| base | standard | OR-PGEE-ZY | 95 | 0.7715941841976034 | 0.9107118366068597 | 26.16940855029761 | 0.9157894736842105 | 95 |
+| base | standard | RR-GEE | 91 | 0.8685083866787006 | 0.5693255938897834 | 40.126264766133914 | 0.989010989010989 | 91 |
+| base | standard | RR-PGEE | 100 | 0.6924301251370941 | 1.1945015054985875 | 47.270402216936674 | 0.89 | 100 |

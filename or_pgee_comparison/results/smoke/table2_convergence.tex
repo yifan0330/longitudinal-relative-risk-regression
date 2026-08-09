@@ -1,0 +1,49 @@
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.15}
+\caption{Simulation convergence performance across simulation scenarios using disjoint convergence categories. The simulation parameters are set to $\beta = (\beta_0, \beta_b, \beta_c)^T = (-4, 1.6, 0.2)^T$, $N = 50$, $c = 0.2$, and $\alpha = 0.4$ in bold, and each row summarizes replications with one parameter altered and all other parameters fixed.}
+\begin{tabular}{ll|rr|rr|rr|rr}
+\hline
+\multicolumn{2}{c|}{Simulation setup} & \multicolumn{2}{c|}{RR-GEE} & \multicolumn{2}{c|}{RR-PGEE} & \multicolumn{2}{c|}{OR-GEE} & \multicolumn{2}{c}{OR-PGEE} \\
+Parameter & Value & Conv. & Non-conv. & Conv. & Non-conv. & Conv. & Non-conv. & Conv. & Non-conv. \\
+\hline
+$\beta_0$ & \textbf{-4} & 95 (0) & 1 (4) & 100 (0) & 0 (0) & 95 (0) & 2 (3) & 95 (0) & 5 (0) \\
+ & -3 & 100 (0) & 0 (0) & 100 (0) & 0 (0) & 96 (0) & 4 (0) & 92 (0) & 8 (0) \\
+ & -2 & 100 (0) & 0 (0) & 100 (0) & 0 (0) & 100 (0) & 0 (0) & 96 (0) & 4 (0) \\
+\hline
+$\beta_b$ & 1.2 & 84 (0) & 4 (12) & 100 (0) & 0 (0) & 84 (0) & 2 (14) & 97 (0) & 3 (0) \\
+ & 1.4 & 89 (0) & 2 (9) & 100 (0) & 0 (0) & 89 (0) & 4 (7) & 97 (0) & 3 (0) \\
+ & \textbf{1.6} & 95 (0) & 1 (4) & 100 (0) & 0 (0) & 95 (0) & 2 (3) & 95 (0) & 5 (0) \\
+ & 1.8 & 96 (0) & 0 (4) & 100 (0) & 0 (0) & 95 (0) & 3 (2) & 93 (0) & 7 (0) \\
+ & 2.0 & 95 (1) & 0 (4) & 99 (0) & 1 (0) & 94 (0) & 3 (3) & 89 (0) & 11 (0) \\
+\hline
+$c$ & \textbf{0.2} & 95 (0) & 1 (4) & 100 (0) & 0 (0) & 95 (0) & 2 (3) & 95 (0) & 5 (0) \\
+ & 0.3 & 93 (0) & 1 (6) & 100 (0) & 0 (0) & 93 (0) & 3 (4) & 100 (0) & 0 (0) \\
+ & 0.4 & 91 (0) & 1 (8) & 100 (0) & 0 (0) & 91 (0) & 5 (4) & 100 (0) & 0 (0) \\
+ & 0.5 & 82 (0) & 0 (18) & 100 (0) & 0 (0) & 82 (0) & 9 (9) & 100 (0) & 0 (0) \\
+ & 0.6 & 79 (0) & 0 (21) & 100 (0) & 0 (0) & 79 (0) & 11 (10) & 100 (0) & 0 (0) \\
+ & 0.7 & 74 (0) & 0 (26) & 100 (0) & 0 (0) & 74 (0) & 14 (12) & 100 (0) & 0 (0) \\
+ & 0.8 & 57 (0) & 0 (43) & 100 (0) & 0 (0) & 57 (0) & 20 (23) & 100 (0) & 0 (0) \\
+\hline
+$\alpha$ & 0.2 & 95 (0) & 0 (5) & 100 (0) & 0 (0) & 93 (0) & 5 (2) & 95 (0) & 5 (0) \\
+ & 0.3 & 96 (0) & 1 (3) & 100 (0) & 0 (0) & 96 (0) & 3 (1) & 96 (0) & 4 (0) \\
+ & \textbf{0.4} & 95 (0) & 1 (4) & 100 (0) & 0 (0) & 95 (0) & 2 (3) & 95 (0) & 5 (0) \\
+ & 0.5 & 92 (0) & 1 (7) & 100 (0) & 0 (0) & 90 (0) & 4 (6) & 93 (0) & 7 (0) \\
+ & 0.6 & 86 (0) & 4 (10) & 98 (1) & 1 (0) & 83 (0) & 8 (9) & 88 (0) & 12 (0) \\
+ & 0.7 & 86 (0) & 2 (12) & 99 (1) & 0 (0) & 80 (0) & 10 (10) & 87 (0) & 13 (0) \\
+ & 0.8 & 73 (0) & 7 (20) & 97 (0) & 3 (0) & 69 (0) & 17 (14) & 81 (0) & 19 (0) \\
+\hline
+$N$ & 25 & 54 (0) & 8 (38) & 94 (1) & 4 (1) & 51 (0) & 25 (24) & 74 (0) & 26 (0) \\
+ & \textbf{50} & 95 (0) & 1 (4) & 100 (0) & 0 (0) & 95 (0) & 2 (3) & 95 (0) & 5 (0) \\
+ & 75 & 97 (0) & 0 (3) & 100 (0) & 0 (0) & 97 (0) & 0 (3) & 96 (0) & 4 (0) \\
+ & 100 & 100 (0) & 0 (0) & 100 (0) & 0 (0) & 100 (0) & 0 (0) & 100 (0) & 0 (0) \\
+\hline
+Conf. shift & 0.50 & 95 (0) & 1 (4) & 100 (0) & 0 (0) & 94 (0) & 4 (2) & 95 (0) & 5 (0) \\
+\hline
+\end{tabular}
+\begin{flushleft}
+\footnotesize Counts are BEC $\leq$ 10 (BEC $>$ 10). Thus, each Conv. or Non-conv. cell reports fits without the boundary-warning diagnostic, with BEC-warning counts in parentheses. The four underlying categories within each method--converged with BEC $\leq$ 10, converged with BEC $>$ 10, non-converged with BEC $\leq$ 10, and non-converged with BEC $>$ 10--are mutually exclusive and sum to the number of replications for that scenario. Conv.: finite fit that met the convergence criterion. Non-conv.: fit that did not produce a finite converged result, including failed or non-finite fits. BEC is the boundary estimates criterion, defined as the maximum model-SE ratio; BEC $>$ 10 is retained as an indicator of potential boundary-related instability. $\beta_0$ and $\beta_b$: true intercept and binary covariate regression coefficients; $c$: proportion of 1's in the binary covariate; $\alpha$: within-cluster correlation coefficient; $N$: number of subjects.
+\end{flushleft}
+\end{table}

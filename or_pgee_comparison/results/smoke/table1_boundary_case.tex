@@ -1,0 +1,49 @@
+\begin{table}[htbp]
+\centering
+\caption{Four-method comparison for one randomly selected replication with a
+         boundary-estimate warning.}
+\label{tab:four-method}
+% Consistent number formatting, scoped to this table:
+\sisetup{group-separator={,}, group-minimum-digits=4, table-number-alignment=center}
+\begin{threeparttable}
+\begin{tabular}{
+    l
+    S[table-format=2.0]
+    S[table-format=2.2]
+    S[table-format=2.2]
+    S[table-format=6.2]
+    l
+  }
+\toprule
+{Method} & {$K$} & {$\hat{\beta}_b$} & {$\hat{z}_b$} & {BEC} & {Status} \\
+\midrule
+  \multirow{3}{*}{RR-GEE} &  5 & -5.20 & -9.49 & 7.61 &  \\
+   & 15 & -15.20 & -27.75 & 1128.31 &  \\
+   & 25 & -25.20 & -46.00 & 167456.47 & Non-converged \\
+\midrule
+  \multirow{3}{*}{RR-PGEE} &  5 & -1.60 & -3.23 & 1.13 &  \\
+   & 15 & -1.60 & -3.23 & 1.13 &  \\
+   & 25 & -1.60 & -3.23 & 1.13 & Converged \\
+\midrule
+  \multirow{3}{*}{OR-GEE} &  5 & -5.26 & -9.53 & 5.29 &  \\
+   & 15 & -15.26 & -27.66 & 782.58 &  \\
+   & 25 & -25.26 & -45.79 & 116144.67 & Non-converged \\
+\midrule
+  \multirow{3}{*}{OR-PGEE} &  5 & -1.60 & -3.17 & 1.27 &  \\
+   & 15 & -1.60 & -3.17 & 1.27 &  \\
+   & 25 & -1.60 & -3.17 & 1.27 & Converged \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}[flushleft]
+\footnotesize
+\item Scenario: \texttt{alpha\_0.5}; replication~9. The replication was sampled
+  reproducibly (random state~20260709) from scenario--replication pairs in which at
+  least one method had $\mathrm{BEC}>10$, then refit with iteration caps
+  $K=5,\,15,\,25$. Status is reported for the $K=25$ fit only.
+  $\hat{\beta}_b$ is the fitted binary-covariate coefficient and
+  $\hat{z}_b=\hat{\beta}_b/\mathrm{SE}(\hat{\beta}_b)$. BEC (boundary-estimate
+  criterion) is the maximum model-to-empirical SE ratio; $\mathrm{BEC}>10$ flags a
+  boundary-warning diagnostic.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}

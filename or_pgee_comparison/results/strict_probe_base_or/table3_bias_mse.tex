@@ -1,0 +1,53 @@
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\caption{Bias and mean-squared error of the estimated risk ratio for the binary covariate across simulation scenarios. Common-replication summary. The simulation parameters are set to $\beta = (\beta_0, \beta_b, \beta_c)^T = (-4, 1.6, 0.2)^T$, $N = 50$, $c = 0.2$, and $\alpha = 0.4$ in bold, and each row summarizes replications with one parameter altered and all other parameters fixed. Summaries are conditional on finite and converged estimates.}
+\begin{tabular}{ll|rrr|rr|rr|rr}
+\hline
+\multicolumn{2}{c|}{Simulation setup} & \multicolumn{3}{c|}{RR-GEE} & \multicolumn{2}{c|}{RR-PGEE} & \multicolumn{2}{c|}{OR-GEE} & \multicolumn{2}{c}{OR-PGEE} \\
+Parameter & Value & N & Bias & MSE & Bias & MSE & Bias & MSE & Bias & MSE \\
+\hline
+$\beta_0$ & \textbf{-4} & 0 &  &  &  &  &  &  &  &  \\
+\hline
+$\beta_b$ & \textbf{1.6} & 0 &  &  &  &  &  &  &  &  \\
+\hline
+$c$ & \textbf{0.2} & 0 &  &  &  &  &  &  &  &  \\
+\hline
+$\alpha$ & \textbf{0.4} & 0 &  &  &  &  &  &  &  &  \\
+\hline
+$N$ & \textbf{50} & 0 &  &  &  &  &  &  &  &  \\
+\hline
+\end{tabular}
+\begin{flushleft}
+\footnotesize Bias and MSE are computed for the estimated risk ratio of the binary covariate. Common-replication summaries use replications where RR-GEE, RR-PGEE, OR-GEE, and OR-PGEE are finite and converged with BEC $\leq$ 10. N is the number of replications used in the summary.
+\end{flushleft}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\caption{Bias and mean-squared error of the estimated risk ratio for the binary covariate across simulation scenarios. Method-specific summary. The simulation parameters are set to $\beta = (\beta_0, \beta_b, \beta_c)^T = (-4, 1.6, 0.2)^T$, $N = 50$, $c = 0.2$, and $\alpha = 0.4$ in bold, and each row summarizes replications with one parameter altered and all other parameters fixed. Summaries are conditional on finite and converged estimates.}
+\begin{tabular}{ll|rrr|rrr|rrr|rrr}
+\hline
+\multicolumn{2}{c|}{Simulation setup} & \multicolumn{3}{c|}{RR-GEE} & \multicolumn{3}{c|}{RR-PGEE} & \multicolumn{3}{c|}{OR-GEE} & \multicolumn{3}{c}{OR-PGEE} \\
+Parameter & Value & N & Bias & MSE & N & Bias & MSE & N & Bias & MSE & N & Bias & MSE \\
+\hline
+$\beta_0$ & \textbf{-4} & 91 & 1.64 & 38.28 & 99 & 8.66 & 1317.5 & 0 &  &  & 95 & 3.77 & 499.8 \\
+\hline
+$\beta_b$ & \textbf{1.6} & 91 & 1.64 & 38.28 & 99 & 8.66 & 1317.5 & 0 &  &  & 95 & 3.77 & 499.8 \\
+\hline
+$c$ & \textbf{0.2} & 91 & 1.64 & 38.28 & 99 & 8.66 & 1317.5 & 0 &  &  & 95 & 3.77 & 499.8 \\
+\hline
+$\alpha$ & \textbf{0.4} & 91 & 1.64 & 38.28 & 99 & 8.66 & 1317.5 & 0 &  &  & 95 & 3.77 & 499.8 \\
+\hline
+$N$ & \textbf{50} & 91 & 1.64 & 38.28 & 99 & 8.66 & 1317.5 & 0 &  &  & 95 & 3.77 & 499.8 \\
+\hline
+\end{tabular}
+\begin{flushleft}
+\footnotesize Bias and MSE are computed for the estimated risk ratio of the binary covariate. Method-specific summaries use each method's finite and converged replications with BEC $\leq$ 10 independently. N is the method-specific number of replications used in each summary.
+\end{flushleft}
+\end{table}

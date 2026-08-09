@@ -1,0 +1,26 @@
+\begin{table}[htbp]
+\centering
+\tiny
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.15}
+\caption{Variance and coverage performance of the estimated risk ratio for the binary covariate across simulation scenarios. The simulation parameters are set to $\beta = (\beta_0, \beta_b, \beta_c)^T = (-4, 1.6, 0.2)^T$, $N = 50$, $c = 0.2$, and $\alpha = 0.4$ in bold, and each row summarizes replications with one parameter altered and all other parameters fixed. Summaries are conditional on finite and converged estimates.}
+\begin{tabular}{ll|rrrrr|rrrrr|rrrrr}
+\hline
+\multicolumn{2}{c|}{Simulation setup} & \multicolumn{5}{c|}{RR-GEE} & \multicolumn{5}{c|}{RR-PGEE} & \multicolumn{5}{c}{OR-PGEE} \\
+Parameter & Value & N & CP & \shortstack{Mean\\SE} & \shortstack{Emp.\\Var.} & \shortstack{Mean CI\\width} & N & CP & \shortstack{Mean\\SE} & \shortstack{Emp.\\Var.} & \shortstack{Mean CI\\width} & N & CP & \shortstack{Mean\\SE} & \shortstack{Emp.\\Var.} & \shortstack{Mean CI\\width} \\
+\hline
+$\beta_0$ & \textbf{-4} & 91 & 0.99 & 0.87 & 0.57 & 40.13 & 100 & 0.89 & 0.69 & 1.19 & 47.27 & 95 & 0.92 & 0.77 & 0.91 & 26.17 \\
+\hline
+$\beta_b$ & \textbf{1.6} & 91 & 0.99 & 0.87 & 0.57 & 40.13 & 100 & 0.89 & 0.69 & 1.19 & 47.27 & 95 & 0.92 & 0.77 & 0.91 & 26.17 \\
+\hline
+$c$ & \textbf{0.2} & 91 & 0.99 & 0.87 & 0.57 & 40.13 & 100 & 0.89 & 0.69 & 1.19 & 47.27 & 95 & 0.92 & 0.77 & 0.91 & 26.17 \\
+\hline
+$\alpha$ & \textbf{0.4} & 91 & 0.99 & 0.87 & 0.57 & 40.13 & 100 & 0.89 & 0.69 & 1.19 & 47.27 & 95 & 0.92 & 0.77 & 0.91 & 26.17 \\
+\hline
+$N$ & \textbf{50} & 91 & 0.99 & 0.87 & 0.57 & 40.13 & 100 & 0.89 & 0.69 & 1.19 & 47.27 & 95 & 0.92 & 0.77 & 0.91 & 26.17 \\
+\hline
+\end{tabular}
+\begin{flushleft}
+\footnotesize CP: empirical 95\% confidence interval coverage probability; Mean SE: average model-based standard error on the log-risk-ratio scale; Emp. Var.: empirical variance of the log-risk-ratio estimates; Mean CI width: average confidence interval width on the risk-ratio scale; N: number of finite and converged replications used in the summary.
+\end{flushleft}
+\end{table}
