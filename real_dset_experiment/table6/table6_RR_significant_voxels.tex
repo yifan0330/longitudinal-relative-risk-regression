@@ -1,0 +1,29 @@
+\begin{table}[htbp]
+\centering
+\caption{Number of significant voxels across predictors for RR-GEE and RR-PGEE estimates. Voxels with at least six individuals having a lesion across two visits were analyzed (19,801 voxels in the brain mask). A 5\% FDR correction and a fixed threshold of $|z| > 1.96$ were applied.}
+\label{tab:significant-voxels}
+\setlength{\tabcolsep}{7pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{lrrrr}
+\hline
+& \multicolumn{2}{c}{FDR-corrected voxels} & \multicolumn{2}{c}{$|z| > 1.96$} \\
+\cline{2-3}\cline{4-5}
+Predictor & RR-GEE & RR-PGEE & RR-GEE & RR-PGEE \\
+\hline
+Age (visit 1) & 9,366 & 11,329 & 10,716 & 12,237 \\
+Time difference & 83 & 444 & 2,151 & 3,786 \\
+CVR score (visit 1) & 4,117 & 6,958 & 6,846 & 9,034 \\
+CVR score difference & 255 & 1,811 & 2,352 & 4,501 \\
+Sex & 1,129 & 2,369 & 3,561 & 5,171 \\
+Head size & 1,907 & 3,595 & 4,459 & 6,212 \\
+Age (visit 1):Time difference & 51 & 449 & 1,304 & 3,174 \\
+Age (visit 1):Sex & 982 & 2,103 & 2,902 & 4,386 \\
+\hline
+\end{tabular}
+
+\vspace{0.4em}
+\begin{minipage}{0.94\linewidth}
+\footnotesize
+FDR: false discovery rate; GEE: generalized estimating equations; PGEE: penalized generalized estimating equations; RR: relative risk.
+\end{minipage}
+\end{table}

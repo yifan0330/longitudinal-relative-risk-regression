@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\caption{Odds ratios across empirical lesion incidence $p_1$ at visit 1 based on OR-GEE estimates $\tilde{\beta}$. Mean and standard deviation (SD) are taken across voxels within each bin as defined in column 1. Data on 1,578 subjects across two visits and 19,801 regressions performed, excluding 1,186 non-converged, failed, or non-finite voxels.}
+\label{tab:or-gee-odds-ratio-by-incidence}
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{|l|r|r|rrrr|}
+\hline
+$p_1$ & \# voxels & \multicolumn{5}{c|}{Mean (SD)} \\
+\cline{3-7}
+& & $p_2 - p_1$ & \multicolumn{4}{c|}{Odds ratio $\exp(\tilde{\beta})$} \\
+\cline{4-7}
+& & & Age (visit 1) & Time difference & CVR (visit 1) & CVR difference \\
+\hline
+[0; 0.0025) & 1,457 & 0.0017 (0.0010) & 1.14 (0.82) & 1.62 (2.84) & 1.33 (0.49) & 1.21 (0.92) \\
+[0.0025; 0.005) & 5,620 & 0.0004 (0.0016) & 1.11 (0.94) & 1.04 (0.32) & 1.32 (0.42) & 1.24 (2.27) \\
+[0.005; 0.01) & 4,568 & 0.0007 (0.0024) & 1.09 (0.09) & 1.04 (0.22) & 1.29 (0.28) & 1.14 (0.57) \\
+[0.01; 1) & 6,970 & 0.0050 (0.0102) & 1.09 (0.06) & 1.04 (0.12) & 1.22 (0.17) & 1.12 (0.25) \\
+\hline
+[0; 1) & 18,615 & 0.0023 (0.0067) & 1.10 (0.57) & 1.09 (0.84) & 1.28 (0.32) & 1.17 (1.32) \\
+\hline
+\end{tabular}
+\end{table}

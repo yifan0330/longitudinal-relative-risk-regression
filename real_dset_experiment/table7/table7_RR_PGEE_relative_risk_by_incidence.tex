@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\caption{Relative risks across empirical lesion incidence $p_1$ at visit 1 based on RR-PGEE estimates $\tilde{\beta}$. Mean and standard deviation (SD) are taken across voxels within each bin as defined in column 1. Data on 1,578 subjects across two visits and 19,801 regressions performed with the iterative algorithm failing for 0 voxels.}
+\label{tab:rr-pgee-relative-risk-by-incidence}
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{|l|r|r|rrrr|}
+\hline
+$p_1$ & \# voxels & \multicolumn{5}{c|}{Mean (SD)} \\
+\cline{3-7}
+& & $p_2 - p_1$ & \multicolumn{4}{c|}{Relative risk $\exp(\tilde{\beta})$} \\
+\cline{4-7}
+& & & Age (visit 1) & Time difference & CVR (visit 1) & CVR difference \\
+\hline
+[0; 0.0025) & 1,669 & 0.0017 (0.0010) & 1.09 (0.15) & 1.45 (1.71) & 1.34 (0.46) & 1.25 (0.88) \\
+[0.0025; 0.005) & 6,233 & 0.0004 (0.0016) & 1.09 (0.16) & 1.07 (0.32) & 1.33 (0.40) & 1.26 (1.06) \\
+[0.005; 0.01) & 4,810 & 0.0007 (0.0024) & 1.09 (0.09) & 1.06 (0.20) & 1.29 (0.27) & 1.15 (0.54) \\
+[0.01; 1) & 7,089 & 0.0050 (0.0101) & 1.08 (0.06) & 1.05 (0.12) & 1.21 (0.16) & 1.12 (0.24) \\
+\hline
+[0; 1) & 19,801 & 0.0022 (0.0066) & 1.09 (0.11) & 1.09 (0.55) & 1.27 (0.31) & 1.18 (0.72) \\
+\hline
+\end{tabular}
+\end{table}
