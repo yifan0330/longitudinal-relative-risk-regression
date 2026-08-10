@@ -1,0 +1,1 @@
+scenario,scenario_type,method,n_used,true_rr,mean_rr,bias_rr,mse_rr,n_unconditional,bias_rr_unconditional,mse_rr_unconditional,mean_beta,bias_beta,mse_beta,coverage,coverage_n

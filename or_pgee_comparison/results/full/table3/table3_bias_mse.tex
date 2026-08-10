@@ -1,0 +1,103 @@
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.1}
+\caption{Bias and mean-squared error of the estimated risk ratio for the binary covariate across simulation scenarios (common-replication summary). Base parameters (in bold) are $\bm{\beta} = (\beta_0, \beta_b, \beta_c)^\top = (-4, 1.6, 0.2)^\top$, $N = 50$, $c = 0.2$, and $\alpha = 0.4$; each row alters one parameter and holds the rest fixed. Summaries are conditional on finite, converged estimates.}
+\label{tab:rr_bias_mse_four_methods_common}
+\begin{tabular}{l c S[table-format=3.0] *{4}{S[table-format=-2.2] S[table-format=5.2]}}
+\toprule
+\multicolumn{3}{c}{Simulation setup} & \multicolumn{2}{c}{RR-GEE} & \multicolumn{2}{c}{RR-PGEE} & \multicolumn{2}{c}{OR-GEE} & \multicolumn{2}{c}{OR-PGEE} \\
+\cmidrule(lr){1-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+{Parameter} & {Value} & {$N_{\mathrm{conv}}$} & {Bias} & {MSE} & {Bias} & {MSE} & {Bias} & {MSE} & {Bias} & {MSE} \\
+\midrule
+$\beta_0$ & \textbf{-4} & 831 & 1.37 & 28.70 & 0.81 & 16.56 & 1.49 & 30.48 & 0.84 & 17.64 \\
+ & -3 & 918 & 0.51 & 14.40 & 0.32 & 9.87 & 0.59 & 15.19 & 0.30 & 10.66 \\
+ & -2 & 940 & 0.24 & 2.57 & 0.21 & 2.37 & 0.30 & 2.67 & 0.15 & 2.44 \\
+\midrule
+$\beta_b$ & 1.2 & 767 & 1.53 & 19.95 & 1.23 & 12.32 & 1.61 & 21.12 & 1.23 & 12.90 \\
+ & 1.4 & 796 & 1.47 & 23.60 & 1.06 & 14.04 & 1.57 & 24.98 & 1.07 & 14.84 \\
+ & \textbf{1.6} & 831 & 1.37 & 28.70 & 0.81 & 16.56 & 1.49 & 30.48 & 0.84 & 17.64 \\
+ & 1.8 & 829 & 1.39 & 37.87 & 0.63 & 21.10 & 1.53 & 39.93 & 0.68 & 22.78 \\
+ & 2.0 & 805 & 1.27 & 48.02 & 0.27 & 26.19 & 1.44 & 50.64 & 0.36 & 28.81 \\
+\midrule
+$c$ & \textbf{0.2} & 831 & 1.37 & 28.70 & 0.81 & 16.56 & 1.49 & 30.48 & 0.84 & 17.64 \\
+ & 0.3 & 909 & 1.83 & 35.74 & 0.80 & 17.74 & 1.95 & 37.72 & 0.88 & 19.16 \\
+ & 0.4 & 887 & 1.41 & 24.80 & 0.21 & 11.21 & 1.50 & 26.02 & 0.30 & 12.10 \\
+ & 0.5 & 833 & 0.94 & 18.12 & -0.35 & 7.94 & 1.02 & 18.95 & -0.27 & 8.48 \\
+ & 0.6 & 756 & 0.08 & 10.28 & -1.12 & 5.75 & 0.13 & 10.57 & -1.05 & 5.88 \\
+ & 0.7 & 668 & -0.70 & 6.96 & -1.84 & 6.04 & -0.65 & 7.08 & -1.78 & 5.96 \\
+ & 0.8 & 525 & -1.77 & 6.34 & -2.71 & 8.62 & -1.75 & 6.35 & -2.66 & 8.39 \\
+\midrule
+$\alpha$ & 0.2 & 849 & 1.22 & 26.79 & 0.73 & 15.74 & 1.32 & 28.23 & 0.74 & 16.62 \\
+ & 0.3 & 849 & 1.38 & 28.80 & 0.83 & 16.53 & 1.49 & 30.60 & 0.84 & 17.52 \\
+ & \textbf{0.4} & 831 & 1.37 & 28.70 & 0.81 & 16.56 & 1.49 & 30.48 & 0.84 & 17.64 \\
+ & 0.5 & 792 & 1.54 & 34.40 & 0.93 & 19.56 & 1.66 & 36.44 & 0.96 & 21.09 \\
+ & 0.6 & 734 & 1.35 & 31.74 & 0.75 & 17.67 & 1.51 & 33.95 & 0.79 & 19.22 \\
+ & 0.7 & 680 & 1.44 & 33.43 & 0.78 & 18.04 & 1.59 & 35.04 & 0.81 & 19.23 \\
+ & 0.8 & 621 & 1.49 & 35.54 & 0.71 & 17.71 & 1.78 & 39.05 & 0.75 & 19.42 \\
+\midrule
+$N$ & 25 & 453 & 0.32 & 16.08 & -0.15 & 9.35 & 0.48 & 17.49 & -0.13 & 10.14 \\
+ & \textbf{50} & 831 & 1.37 & 28.70 & 0.81 & 16.56 & 1.49 & 30.48 & 0.84 & 17.64 \\
+ & 75 & 951 & 1.49 & 40.79 & 0.97 & 23.39 & 1.56 & 42.50 & 0.98 & 24.98 \\
+ & 100 & 987 & 1.34 & 31.58 & 0.97 & 19.74 & 1.40 & 32.49 & 0.98 & 20.69 \\
+\midrule
+Conf. shift & 0.50 & 828 & 3.49 & 143.47 & 2.38 & 81.82 & 2.92 & 101.92 & 1.96 & 63.44 \\
+\bottomrule
+\end{tabular}
+\begin{flushleft}
+\footnotesize Bias and MSE are for the estimated risk ratio of the binary covariate. Common-replication summaries use replications for which RR-GEE, RR-PGEE, OR-GEE, and OR-PGEE are all finite and converged with BEC $\leq 10$; $N_{\mathrm{conv}}$ is the number of such replications.
+\end{flushleft}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.1}
+\caption{Bias and mean-squared error of the estimated risk ratio for the binary covariate across simulation scenarios (method-specific summary). Base parameters (in bold) are $\bm{\beta} = (\beta_0, \beta_b, \beta_c)^\top = (-4, 1.6, 0.2)^\top$, $N = 50$, $c = 0.2$, and $\alpha = 0.4$; each row alters one parameter and holds the rest fixed. Summaries are conditional on finite, converged estimates.}
+\label{tab:rr_bias_mse_four_methods_method_specific}
+\begin{tabular}{l c *{4}{S[table-format=4.0] S[table-format=-2.2] S[table-format=5.2]}}
+\toprule
+\multicolumn{2}{c}{Simulation setup} & \multicolumn{3}{c}{RR-GEE} & \multicolumn{3}{c}{RR-PGEE} & \multicolumn{3}{c}{OR-GEE} & \multicolumn{3}{c}{OR-PGEE} \\
+\cmidrule(lr){1-2} \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11} \cmidrule(lr){12-14}
+{Parameter} & {Value} & {$N_{\mathrm{conv}}$} & {Bias} & {MSE} & {$N_{\mathrm{conv}}$} & {Bias} & {MSE} & {$N_{\mathrm{conv}}$} & {Bias} & {MSE} & {$N_{\mathrm{conv}}$} & {Bias} & {MSE} \\
+\midrule
+$\beta_0$ & \textbf{-4} & 878 & 2.07 & 44.95 & 985 & 10.18 & 2454.09 & 868 & 1.99 & 40.79 & 922 & 5.60 & 948.15 \\
+ & -3 & 995 & 1.08 & 24.21 & 1000 & 1.43 & 214.59 & 971 & 0.92 & 18.20 & 922 & 1.17 & 441.58 \\
+ & -2 & 1000 & 0.34 & 2.78 & 1000 & 0.31 & 2.58 & 994 & 0.37 & 2.82 & 941 & 0.15 & 2.44 \\
+\midrule
+$\beta_b$ & 1.2 & 805 & 2.06 & 33.91 & 984 & 7.89 & 1629.08 & 788 & 1.92 & 27.96 & 941 & 4.12 & 518.69 \\
+ & 1.4 & 837 & 2.11 & 39.85 & 985 & 9.26 & 2197.71 & 824 & 1.97 & 34.04 & 934 & 4.91 & 712.52 \\
+ & \textbf{1.6} & 878 & 2.07 & 44.95 & 985 & 10.18 & 2454.09 & 868 & 1.99 & 40.79 & 922 & 5.60 & 948.15 \\
+ & 1.8 & 900 & 2.37 & 60.58 & 988 & 11.80 & 2890.00 & 886 & 2.23 & 54.54 & 897 & 6.75 & 1410.46 \\
+ & 2.0 & 909 & 2.71 & 80.86 & 985 & 12.81 & 3132.90 & 886 & 2.40 & 68.51 & 859 & 8.29 & 2165.54 \\
+\midrule
+$c$ & \textbf{0.2} & 878 & 2.07 & 44.95 & 985 & 10.18 & 2454.09 & 868 & 1.99 & 40.79 & 922 & 5.60 & 948.15 \\
+ & 0.3 & 915 & 1.86 & 36.36 & 999 & 6.80 & 736.60 & 911 & 1.97 & 38.18 & 995 & 7.50 & 833.52 \\
+ & 0.4 & 888 & 1.40 & 24.77 & 1000 & 5.05 & 293.78 & 887 & 1.50 & 26.02 & 1000 & 5.99 & 401.17 \\
+ & 0.5 & 834 & 0.94 & 18.10 & 1000 & 4.15 & 160.43 & 833 & 1.02 & 18.95 & 1000 & 4.96 & 211.76 \\
+ & 0.6 & 758 & 0.08 & 10.26 & 1000 & 3.69 & 125.34 & 757 & 0.13 & 10.57 & 1000 & 4.51 & 168.38 \\
+ & 0.7 & 668 & -0.70 & 6.96 & 1000 & 1.99 & 53.17 & 668 & -0.65 & 7.08 & 1000 & 2.51 & 67.10 \\
+ & 0.8 & 525 & -1.77 & 6.34 & 1000 & 0.09 & 17.59 & 525 & -1.75 & 6.35 & 1000 & 0.44 & 21.07 \\
+\midrule
+$\alpha$ & 0.2 & 892 & 1.74 & 35.93 & 987 & 11.44 & 4066.85 & 885 & 1.68 & 35.20 & 935 & 6.43 & 1259.47 \\
+ & 0.3 & 888 & 1.87 & 37.51 & 989 & 11.18 & 2916.29 & 881 & 1.82 & 36.63 & 933 & 6.53 & 1316.85 \\
+ & \textbf{0.4} & 878 & 2.07 & 44.95 & 985 & 10.18 & 2454.09 & 868 & 1.99 & 40.79 & 922 & 5.60 & 948.15 \\
+ & 0.5 & 849 & 2.27 & 49.49 & 980 & 9.59 & 1805.92 & 831 & 2.17 & 46.75 & 912 & 6.50 & 1147.31 \\
+ & 0.6 & 815 & 2.53 & 61.07 & 975 & 11.83 & 2183.91 & 793 & 2.41 & 53.20 & 874 & 6.88 & 1035.73 \\
+ & 0.7 & 772 & 2.63 & 60.33 & 960 & 13.69 & 2658.09 & 740 & 2.64 & 59.43 & 849 & 9.03 & 1556.26 \\
+ & 0.8 & 726 & 3.18 & 80.02 & 944 & 16.44 & 3287.29 & 689 & 3.02 & 65.57 & 808 & 8.41 & 1201.42 \\
+\midrule
+$N$ & 25 & 544 & 1.76 & 34.80 & 913 & 41.05 & 46078.69 & 522 & 1.34 & 25.93 & 725 & 7.10 & 936.21 \\
+ & \textbf{50} & 878 & 2.07 & 44.95 & 985 & 10.18 & 2454.09 & 868 & 1.99 & 40.79 & 922 & 5.60 & 948.15 \\
+ & 75 & 971 & 1.84 & 51.24 & 1000 & 4.53 & 864.33 & 965 & 1.87 & 52.50 & 980 & 4.13 & 814.47 \\
+ & 100 & 995 & 1.40 & 32.34 & 1000 & 1.12 & 33.83 & 992 & 1.44 & 32.87 & 993 & 1.13 & 50.61 \\
+\midrule
+Conf. shift & 0.50 & 886 & 4.45 & 175.89 & 985 & 31.72 & 97384.97 & 874 & 3.62 & 123.38 & 909 & 9.84 & 3585.45 \\
+\bottomrule
+\end{tabular}
+\begin{flushleft}
+\footnotesize Bias and MSE are for the estimated risk ratio of the binary covariate. Method-specific summaries use each method's finite and converged replications with BEC $\leq 10$ independently; $N_{\mathrm{conv}}$ is the method-specific number of replications used in each summary.
+\end{flushleft}
+\end{table}

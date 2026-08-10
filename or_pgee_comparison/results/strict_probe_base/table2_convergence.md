@@ -1,0 +1,5 @@
+| scenario | scenario_type | method | n_replications | converged_finite | failed_or_nonfinite | non_converged | bec_gt_10 | bec_gt_10_non_converged |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| base | standard | OR-PGEE-ZY | 100 | 95 | 2 | 5 | 5 | 5 |
+| base | standard | RR-GEE | 100 | 91 | 2 | 9 | 7 | 7 |
+| base | standard | RR-PGEE | 100 | 100 | 0 | 0 | 1 | 0 |

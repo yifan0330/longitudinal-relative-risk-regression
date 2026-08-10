@@ -1,0 +1,49 @@
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.15}
+\caption{Simulation convergence performance across simulation scenarios using disjoint convergence categories. The simulation parameters are set to $\beta = (\beta_0, \beta_b, \beta_c)^T = (-4, 1.6, 0.2)^T$, $N = 50$, $c = 0.2$, and $\alpha = 0.4$ in bold, and each row summarizes replications with one parameter altered and all other parameters fixed.}
+\begin{tabular}{ll|rr|rr|rr|rr}
+\hline
+\multicolumn{2}{c|}{Simulation setup} & \multicolumn{2}{c|}{RR-GEE} & \multicolumn{2}{c|}{RR-PGEE} & \multicolumn{2}{c|}{OR-GEE} & \multicolumn{2}{c}{OR-PGEE} \\
+Parameter & Value & Conv. & Non-conv. & Conv. & Non-conv. & Conv. & Non-conv. & Conv. & Non-conv. \\
+\hline
+$\beta_0$ & \textbf{-4} & 878 (7) & 22 (93) & 985 (10) & 3 (2) & 868 (0) & 58 (74) & 922 (0) & 78 (0) \\
+ & -3 & 995 (1) & 0 (4) & 1000 (0) & 0 (0) & 971 (0) & 26 (3) & 922 (0) & 78 (0) \\
+ & -2 & 1000 (0) & 0 (0) & 1000 (0) & 0 (0) & 994 (0) & 5 (1) & 941 (0) & 59 (0) \\
+\hline
+$\beta_b$ & 1.2 & 805 (2) & 46 (147) & 984 (11) & 1 (4) & 788 (1) & 62 (149) & 941 (0) & 59 (0) \\
+ & 1.4 & 837 (4) & 33 (126) & 985 (11) & 0 (4) & 824 (0) & 61 (115) & 934 (0) & 66 (0) \\
+ & \textbf{1.6} & 878 (7) & 22 (93) & 985 (10) & 3 (2) & 868 (0) & 58 (74) & 922 (0) & 78 (0) \\
+ & 1.8 & 900 (8) & 14 (78) & 988 (7) & 3 (2) & 886 (0) & 55 (59) & 897 (0) & 103 (0) \\
+ & 2.0 & 909 (11) & 9 (71) & 985 (8) & 5 (2) & 886 (0) & 66 (48) & 859 (0) & 141 (0) \\
+\hline
+$c$ & \textbf{0.2} & 878 (7) & 22 (93) & 985 (10) & 3 (2) & 868 (0) & 58 (74) & 922 (0) & 78 (0) \\
+ & 0.3 & 915 (0) & 8 (77) & 999 (0) & 1 (0) & 911 (0) & 49 (40) & 995 (0) & 5 (0) \\
+ & 0.4 & 888 (0) & 3 (109) & 1000 (0) & 0 (0) & 887 (0) & 59 (54) & 1000 (0) & 0 (0) \\
+ & 0.5 & 834 (0) & 0 (166) & 1000 (0) & 0 (0) & 833 (0) & 82 (85) & 1000 (0) & 0 (0) \\
+ & 0.6 & 758 (0) & 1 (241) & 1000 (0) & 0 (0) & 757 (0) & 132 (111) & 1000 (0) & 0 (0) \\
+ & 0.7 & 668 (0) & 0 (332) & 1000 (0) & 0 (0) & 668 (0) & 155 (177) & 1000 (0) & 0 (0) \\
+ & 0.8 & 525 (0) & 0 (475) & 1000 (0) & 0 (0) & 525 (0) & 244 (231) & 1000 (0) & 0 (0) \\
+\hline
+$\alpha$ & 0.2 & 892 (4) & 17 (87) & 987 (10) & 2 (1) & 885 (0) & 45 (70) & 935 (0) & 65 (0) \\
+ & 0.3 & 888 (4) & 19 (89) & 989 (7) & 3 (1) & 881 (0) & 48 (71) & 933 (0) & 67 (0) \\
+ & \textbf{0.4} & 878 (7) & 22 (93) & 985 (10) & 3 (2) & 868 (0) & 58 (74) & 922 (0) & 78 (0) \\
+ & 0.5 & 849 (6) & 28 (117) & 980 (13) & 6 (1) & 831 (0) & 69 (100) & 912 (0) & 88 (0) \\
+ & 0.6 & 815 (6) & 43 (136) & 975 (11) & 10 (4) & 793 (0) & 84 (123) & 874 (0) & 126 (0) \\
+ & 0.7 & 772 (9) & 55 (164) & 960 (13) & 22 (5) & 740 (0) & 131 (129) & 849 (0) & 151 (0) \\
+ & 0.8 & 726 (7) & 76 (191) & 944 (11) & 36 (9) & 689 (2) & 154 (155) & 808 (0) & 192 (0) \\
+\hline
+$N$ & 25 & 544 (0) & 153 (303) & 913 (4) & 61 (22) & 522 (0) & 235 (243) & 725 (0) & 275 (0) \\
+ & \textbf{50} & 878 (7) & 22 (93) & 985 (10) & 3 (2) & 868 (0) & 58 (74) & 922 (0) & 78 (0) \\
+ & 75 & 971 (0) & 2 (27) & 1000 (0) & 0 (0) & 965 (0) & 13 (22) & 980 (0) & 20 (0) \\
+ & 100 & 995 (0) & 0 (5) & 1000 (0) & 0 (0) & 992 (0) & 4 (4) & 993 (0) & 7 (0) \\
+\hline
+Conf. shift & 0.50 & 886 (8) & 19 (87) & 985 (10) & 4 (1) & 874 (0) & 64 (62) & 909 (0) & 91 (0) \\
+\hline
+\end{tabular}
+\begin{flushleft}
+\footnotesize Counts are BEC $\leq$ 10 (BEC $>$ 10). Thus, each Conv. or Non-conv. cell reports fits without the boundary-warning diagnostic, with BEC-warning counts in parentheses. The four underlying categories within each method--converged with BEC $\leq$ 10, converged with BEC $>$ 10, non-converged with BEC $\leq$ 10, and non-converged with BEC $>$ 10--are mutually exclusive and sum to the number of replications for that scenario. Conv.: finite fit that met the convergence criterion. Non-conv.: fit that did not produce a finite converged result, including failed or non-finite fits. BEC is the boundary estimates criterion, defined as the maximum model-SE ratio; BEC $>$ 10 is retained as an indicator of potential boundary-related instability. For the odds-ratio methods, BEC warnings rarely accompanied finite convergence: OR-PGEE had no BEC $>$ 10 counts in either convergence category, and OR-GEE had only three converged BEC-warning fits across all scenarios, with its BEC warnings concentrated among non-converged fits. This pattern reflects the diagnostic definition: once an OR fit returned finite estimates and satisfied the convergence criterion, the fitted model-SE ratios were generally below the BEC threshold; fits that failed to converge or became non-finite were instead counted as non-converged. $\beta_0$ and $\beta_b$: true intercept and binary covariate regression coefficients; $c$: proportion of 1's in the binary covariate; $\alpha$: within-cluster correlation coefficient; $N$: number of subjects.
+\end{flushleft}
+\end{table}
