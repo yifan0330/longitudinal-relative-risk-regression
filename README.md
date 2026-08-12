@@ -4,6 +4,26 @@
 
 This repository contains code and generated simulation results for longitudinal relative-risk regression analyses using GEE and penalized GEE estimators.
 
+## Scientific Overview
+
+This project develops penalized generalized estimating equations (PGEE) for
+relative-risk regression of correlated binary data, motivated by longitudinal
+brain-lesion maps. Lesion incidence varies across the brain, producing both rare
+and highly prevalent outcomes. Consequently, odds ratios from logistic GEE
+models are not always directly interpretable as relative risks, while
+binomial log-link GEE models can become unstable when event probabilities are
+close to one.
+
+The proposed approach uses a log-link mean structure with an identity variance
+function and an unknown dispersion parameter. To address infinite parameter
+estimates that can still occur in this setting, the estimating equations are
+penalized using the gradient of the Jeffreys prior. Simulation studies show
+that this approach improves finite estimation and convergence over standard
+log-link GEE, particularly when boundary estimates occur. The UK Biobank
+brain-lesion application demonstrates the instability of standard log-link GEE
+in a large-scale dataset and highlights the direct clinical interpretability of
+relative risks.
+
 ## Environment setup
 
 Install [uv](https://docs.astral.sh/uv/) and create the locked Python
