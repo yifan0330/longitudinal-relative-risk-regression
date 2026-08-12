@@ -29,11 +29,14 @@ from RR_OR_GEE_PGEE.methods import (
     zhang_yu_rr,
 )
 from UKB_validation.cli import FIGURE_COMMANDS, TABLE_COMMANDS
+from UKB_validation.io import values_at_voxels
 from UKB_validation.figure3.plot_ukb_empirical_maps import (
     reconstruct_maps,
     slice_indices_to_cut_coords,
 )
 from UKB_validation.paths import ExperimentPaths
+from UKB_validation.mapping import values_to_map
+from UKB_validation.stats import benjamini_hochberg, odds_ratio_to_relative_risk
 from UKB_validation.ukb_python_experiment import (
     UKBDesign,
     _initial_beta,
@@ -194,6 +197,22 @@ class RealDataHelperTests(unittest.TestCase):
         self.assertAlmostEqual(sqrt_map[1, 0, 0], np.sqrt(0.5))
         self.assertAlmostEqual(rr_map[0, 0, 0], 1.0)
         self.assertAlmostEqual(rr_map[1, 0, 0], 2.0)
+
+    def test_shared_map_helpers_round_trip_fortran_order(self) -> None:
+        values = np.array([10.0, 20.0, 30.0])
+        voxel_ids = np.array([1, 2, 5])
+        image = values_to_map(values, voxel_ids, (2, 2, 2))
+        np.testing.assert_allclose(values_at_voxels(image, voxel_ids), values)
+
+    def test_shared_statistics_match_expected_adjustments(self) -> None:
+        np.testing.assert_allclose(
+            benjamini_hochberg(np.array([0.01, 0.04, 0.2])),
+            [0.03, 0.06, 0.2],
+        )
+        np.testing.assert_allclose(
+            odds_ratio_to_relative_risk(np.array([2.0]), np.array([0.25])),
+            [1.6],
+        )
 
     def test_slice_coordinates_validate_image_bounds(self) -> None:
         image = nib.Nifti1Image(np.zeros((2, 2, 3)), np.diag([2.0, 2.0, 2.0, 1.0]))

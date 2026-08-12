@@ -16,6 +16,8 @@ from nibabel.affines import apply_affine
 from nilearn.plotting import plot_stat_map
 import numpy as np
 
+from UKB_validation.io import load_empirical_visits, load_voxel_ids
+from UKB_validation.mapping import values_to_map
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 from UKB_validation.paths import DEFAULT_ANATOMICAL, DEFAULT_UKB_DIR
@@ -38,7 +40,7 @@ def load_inputs(
     with np.load(lesion_path) as lesion_data:
         visit_1 = np.asarray(lesion_data["lesions_vis1"], dtype=float)
         visit_2 = np.asarray(lesion_data["lesions_vis2"], dtype=float)
-    voxel_ids = np.loadtxt(voxel_path, dtype=int).reshape(-1)
+    voxel_ids = load_voxel_ids(voxel_path)
 
     if visit_1.shape != visit_2.shape:
         raise ValueError("Visit lesion matrices must have identical dimensions")
@@ -75,11 +77,8 @@ def reconstruct_maps(
     )
 
     # UKB voxel IDs are one-based and follow the original R/Fortran ordering.
-    coordinates = np.unravel_index(voxel_ids - 1, shape, order="F")
-    sqrt_incidence_map = np.full(shape, np.nan)
-    relative_risk_map = np.full(shape, np.nan)
-    sqrt_incidence_map[coordinates] = np.sqrt(p1)
-    relative_risk_map[coordinates] = relative_risk
+    sqrt_incidence_map = values_to_map(np.sqrt(p1), voxel_ids, shape)
+    relative_risk_map = values_to_map(relative_risk, voxel_ids, shape)
     return sqrt_incidence_map, relative_risk_map
 
 

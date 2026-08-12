@@ -27,6 +27,8 @@ from UKB_validation.ukb_python_experiment import (
     model_result_dir,
 )
 from UKB_validation.paths import DEFAULT_UKB_DIR
+from UKB_validation.io import load_empirical_visits, load_voxel_ids as _load_voxel_ids
+from UKB_validation.mapping import values_to_map as _values_to_map
 
 
 DEFAULT_VOXEL_IDS = DEFAULT_UKB_DIR / "voxel_IDs_CVR.dat"
@@ -127,14 +129,7 @@ def resolve_models(models: tuple[str, ...] | list[str]) -> tuple[str, ...]:
 
 def load_voxel_ids(path: Path, max_voxels: int | None = None) -> np.ndarray:
     """Load unique one-based voxel indices, optionally truncating the mask."""
-    voxel_ids = np.loadtxt(path, dtype=int).reshape(-1)
-    if voxel_ids.size == 0 or np.any(voxel_ids < 1):
-        raise ValueError("Voxel IDs must be nonempty positive one-based indices")
-    if np.unique(voxel_ids).size != voxel_ids.size:
-        raise ValueError("Voxel IDs must be unique")
-    if max_voxels is not None:
-        voxel_ids = voxel_ids[:max_voxels]
-    return voxel_ids
+    return _load_voxel_ids(path, max_voxels=max_voxels)
 
 
 def load_empirical_maps(
@@ -143,15 +138,7 @@ def load_empirical_maps(
     shape: tuple[int, int, int],
 ) -> tuple[np.ndarray, np.ndarray]:
     """Build empirical incidence and relative-risk maps from two visits."""
-    with np.load(ukb_dir / "lesions_atleast6_CVR.npz") as lesion_data:
-        visit_1 = np.asarray(lesion_data["lesions_vis1"], dtype=float)
-        visit_2 = np.asarray(lesion_data["lesions_vis2"], dtype=float)
-    if visit_1.shape != visit_2.shape:
-        raise ValueError("Visit lesion matrices must have matching shapes")
-    if visit_1.shape[0] < voxel_ids.size:
-        raise ValueError("Lesion matrices contain fewer voxels than voxel_IDs_CVR.dat")
-    visit_1 = visit_1[:voxel_ids.size]
-    visit_2 = visit_2[:voxel_ids.size]
+    visit_1, visit_2 = load_empirical_visits(ukb_dir, voxel_ids.size)
 
     p1 = visit_1.mean(axis=1)
     p2 = visit_2.mean(axis=1)
@@ -161,10 +148,7 @@ def load_empirical_maps(
 
 def values_to_map(values: np.ndarray, voxel_ids: np.ndarray, shape: tuple[int, int, int]) -> np.ndarray:
     """Place mask values into a 3D array using Fortran-order voxel IDs."""
-    data = np.full(shape, np.nan, dtype=float)
-    coordinates = np.unravel_index(voxel_ids - 1, shape, order="F")
-    data[coordinates] = values
-    return data
+    return _values_to_map(values, voxel_ids, shape)
 
 
 def load_relative_risk_map(

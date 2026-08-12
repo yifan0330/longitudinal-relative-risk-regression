@@ -30,6 +30,7 @@ from UKB_validation.ukb_python_experiment import (
     model_is_poisson,
     model_result_dir,
 )
+from UKB_validation.mapping import values_to_map as _values_to_map
 
 
 DEFAULT_OUTPUT = SCRIPT_DIR / "figure5_rr_pgee_alpha_map.png"
@@ -187,10 +188,7 @@ def estimate_alpha_phi(
 
 def values_to_map(values: np.ndarray, voxel_ids: np.ndarray, shape: tuple[int, int, int]) -> np.ndarray:
     """Place mask values into a 3D map using the UKB voxel convention."""
-    data = np.full(shape, np.nan, dtype=float)
-    coordinates = np.unravel_index(voxel_ids - 1, shape, order="F")
-    data[coordinates] = values
-    return data
+    return _values_to_map(values, voxel_ids, shape)
 
 
 def write_nifti(values: np.ndarray, voxel_ids: np.ndarray, template: nib.Nifti1Image, output: Path) -> None:

@@ -21,6 +21,7 @@ from UKB_validation.ukb_python_experiment import (
     model_result_dir,
 )
 from UKB_validation.paths import DEFAULT_UKB_DIR
+from UKB_validation.io import load_empirical_visits, load_voxel_ids as _load_voxel_ids
 
 
 DEFAULT_VOXEL_IDS = DEFAULT_UKB_DIR / "voxel_IDs_CVR.dat"
@@ -149,29 +150,14 @@ def validate_args(args: argparse.Namespace) -> None:
 
 def load_voxel_ids(path: Path, max_voxels: int | None = None) -> np.ndarray:
     """Load unique one-based voxel IDs, optionally limiting the mask."""
-    voxel_ids = np.loadtxt(path, dtype=int).reshape(-1)
-    if voxel_ids.size == 0 or np.any(voxel_ids < 1):
-        raise ValueError("Voxel IDs must be nonempty positive one-based indices")
-    if np.unique(voxel_ids).size != voxel_ids.size:
-        raise ValueError("Voxel IDs must be unique")
-    if max_voxels is not None:
-        voxel_ids = voxel_ids[:max_voxels]
-    return voxel_ids
+    return _load_voxel_ids(path, max_voxels=max_voxels)
 
 
 def load_empirical_values(
     ukb_dir: Path, voxel_ids: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray, int]:
     """Load visit-1 incidence, its change, and participant count."""
-    with np.load(ukb_dir / "lesions_atleast6_CVR.npz") as lesion_data:
-        visit_1 = np.asarray(lesion_data["lesions_vis1"], dtype=float)
-        visit_2 = np.asarray(lesion_data["lesions_vis2"], dtype=float)
-    if visit_1.shape != visit_2.shape:
-        raise ValueError("Visit lesion matrices must have matching shapes")
-    if visit_1.shape[0] < voxel_ids.size:
-        raise ValueError("Lesion matrices contain fewer voxels than voxel IDs")
-    visit_1 = visit_1[: voxel_ids.size]
-    visit_2 = visit_2[: voxel_ids.size]
+    visit_1, visit_2 = load_empirical_visits(ukb_dir, voxel_ids.size)
     return visit_1.mean(axis=1), visit_2.mean(axis=1) - visit_1.mean(axis=1), visit_1.shape[1]
 
 

@@ -28,6 +28,8 @@ from UKB_validation.ukb_python_experiment import (
     model_result_dir,
 )
 from UKB_validation.paths import DEFAULT_UKB_DIR
+from UKB_validation.io import load_voxel_ids as _load_voxel_ids
+from UKB_validation.stats import benjamini_hochberg as _benjamini_hochberg
 
 
 DEFAULT_RESULT_DIRS = {
@@ -138,26 +140,12 @@ def validate_args(args: argparse.Namespace) -> None:
 
 def load_voxel_ids(path: Path) -> np.ndarray:
     """Load unique one-based voxel indices used by the UKB analysis mask."""
-    voxel_ids = np.loadtxt(path, dtype=int).reshape(-1)
-    if voxel_ids.size == 0 or np.any(voxel_ids < 1):
-        raise ValueError("Voxel IDs must be nonempty positive one-based indices")
-    if np.unique(voxel_ids).size != voxel_ids.size:
-        raise ValueError("Voxel IDs must be unique")
-    return voxel_ids
+    return _load_voxel_ids(path)
 
 
 def benjamini_hochberg(p_values: np.ndarray) -> np.ndarray:
     """Return BH-adjusted p-values, retaining failed fits as p=1 tests."""
-    finite_p_values = np.where(np.isfinite(p_values), p_values, 1.0)
-    order = np.argsort(finite_p_values)
-    ranked = finite_p_values[order]
-    ranks = np.arange(1, ranked.size + 1)
-    adjusted_ranked = np.minimum.accumulate(
-        (ranked * ranked.size / ranks)[::-1]
-    )[::-1]
-    adjusted = np.empty_like(adjusted_ranked)
-    adjusted[order] = np.minimum(adjusted_ranked, 1.0)
-    return adjusted
+    return _benjamini_hochberg(p_values)
 
 
 def filter_zscores(

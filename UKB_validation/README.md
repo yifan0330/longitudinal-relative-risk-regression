@@ -40,6 +40,11 @@ data and cached model results; it is not recreated by the plotting commands.
 ## Package layout
 
 * `paths.py` defines the canonical filesystem configuration.
+* `io.py` centralizes voxel-ID validation, lesion loading, aligned-image
+  checks, and Fortran-order voxel extraction.
+* `mapping.py` reconstructs mask values as 3D maps without duplicating the
+  UKB indexing convention.
+* `stats.py` contains shared multiple-testing and effect-size transformations.
 * `ukb_python_experiment.py` fits the four longitudinal models.
 * `plot_figure3.py`–`plot_figure7.py` and `plot_figure_b3.py` are the
   recommended figure entry points.

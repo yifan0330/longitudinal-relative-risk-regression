@@ -22,6 +22,11 @@ from UKB_validation.ukb_python_experiment import (
     ensure_model_outputs,
 )
 from UKB_validation.paths import DEFAULT_UKB_DIR
+from UKB_validation.io import (
+    load_voxel_ids as _load_voxel_ids,
+    values_at_voxels,
+)
+from UKB_validation.stats import benjamini_hochberg as _benjamini_hochberg
 
 
 DEFAULT_VOXEL_IDS = DEFAULT_UKB_DIR / "voxel_IDs_CVR.dat"
@@ -97,14 +102,7 @@ def validate_args(args: argparse.Namespace) -> None:
 
 def load_voxel_ids(path: Path) -> np.ndarray:
     """Load unique positive one-based analysis-mask voxel IDs."""
-    voxel_ids = np.loadtxt(path, dtype=int).reshape(-1)
-    if voxel_ids.size == 0:
-        raise ValueError(f"No voxel IDs found in {path}")
-    if np.any(voxel_ids < 1):
-        raise ValueError("Voxel IDs must be positive one-based indices")
-    if np.unique(voxel_ids).size != voxel_ids.size:
-        raise ValueError("Voxel IDs must be unique")
-    return voxel_ids
+    return _load_voxel_ids(path)
 
 
 def analysis_voxel_ids(args: argparse.Namespace) -> np.ndarray:
@@ -120,26 +118,12 @@ def load_zscores(result_dir: Path, predictor: str, voxel_ids: np.ndarray) -> np.
         raise FileNotFoundError(f"Z-statistic map not found: {path}")
 
     data = np.asarray(nib.load(path).get_fdata(), dtype=float)
-    if data.ndim != 3:
-        raise ValueError(f"Expected a 3D z-statistic map, got {data.shape}: {path}")
-    if voxel_ids.max() > data.size:
-        raise ValueError(f"Voxel IDs exceed the image grid in {path}")
-    return data.ravel(order="F")[voxel_ids - 1]
+    return values_at_voxels(data, voxel_ids, source=str(path))
 
 
 def benjamini_hochberg(p_values: np.ndarray) -> np.ndarray:
     """Return BH-adjusted p-values, treating failed voxel fits as p=1."""
-    p_values = np.asarray(p_values, dtype=float)
-    finite_p_values = np.where(np.isfinite(p_values), p_values, 1.0)
-    order = np.argsort(finite_p_values)
-    ranked = finite_p_values[order]
-    ranks = np.arange(1, ranked.size + 1)
-    adjusted_ranked = np.minimum.accumulate(
-        (ranked * ranked.size / ranks)[::-1]
-    )[::-1]
-    adjusted = np.empty_like(adjusted_ranked)
-    adjusted[order] = np.minimum(adjusted_ranked, 1.0)
-    return adjusted
+    return _benjamini_hochberg(p_values)
 
 
 def count_significant(

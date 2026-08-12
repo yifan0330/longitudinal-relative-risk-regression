@@ -32,6 +32,8 @@ import nibabel as nib
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
+
+from UKB_validation.io import load_voxel_ids as _load_voxel_ids
 from scipy.special import expit, logit
 
 from .paths import DEFAULT_ANATOMICAL, DEFAULT_PYTHON_RESULTS_DIR, DEFAULT_UKB_DIR
@@ -108,12 +110,7 @@ def default_n_jobs() -> int:
 
 def load_voxel_ids(path: Path) -> np.ndarray:
     """Load and validate one-based voxel indices from a text file."""
-    voxel_ids = np.loadtxt(path, dtype=int).reshape(-1)
-    if voxel_ids.size == 0 or np.any(voxel_ids < 1):
-        raise ValueError(f"Voxel IDs must be nonempty positive one-based indices: {path}")
-    if np.unique(voxel_ids).size != voxel_ids.size:
-        raise ValueError(f"Voxel IDs must be unique: {path}")
-    return voxel_ids
+    return _load_voxel_ids(path)
 
 
 def load_ukb_design(ukb_dir: Path = DEFAULT_UKB_DIR, max_voxels: int | None = None) -> UKBDesign:
