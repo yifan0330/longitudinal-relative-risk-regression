@@ -1,6 +1,6 @@
 # Longitudinal relative risk regression
 
-**Full project name:** Longitudinal relative risk regression
+**Full project name:** Longitudinal relative risk regression for binary-valued brain-lesion data
 
 This repository contains code and generated simulation results for longitudinal relative-risk regression analyses using GEE and penalized GEE estimators.
 
