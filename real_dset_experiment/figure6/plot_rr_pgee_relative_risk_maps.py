@@ -41,6 +41,7 @@ PREDICTORS = (
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse model-selection, plotting, and output options for Figure 6."""
     parser = argparse.ArgumentParser(
         description="Plot separate unmasked Figure 6 relative-risk subfigures."
     )
@@ -97,6 +98,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    """Validate paths, model selection, and Figure 6 plotting parameters."""
     for label, path in (
         ("UKB input directory", args.ukb_dir),
         ("anatomical image", args.anatomical),
@@ -119,10 +121,12 @@ def validate_args(args: argparse.Namespace) -> None:
 
 
 def resolve_models(models: tuple[str, ...] | list[str]) -> tuple[str, ...]:
+    """Expand the ``all`` option to the methods used in Figure 6."""
     return FIGURE6_MODELS if "all" in models else tuple(models)
 
 
 def load_voxel_ids(path: Path, max_voxels: int | None = None) -> np.ndarray:
+    """Load unique one-based voxel indices, optionally truncating the mask."""
     voxel_ids = np.loadtxt(path, dtype=int).reshape(-1)
     if voxel_ids.size == 0 or np.any(voxel_ids < 1):
         raise ValueError("Voxel IDs must be nonempty positive one-based indices")
@@ -138,6 +142,7 @@ def load_empirical_maps(
     voxel_ids: np.ndarray,
     shape: tuple[int, int, int],
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Build empirical incidence and relative-risk maps from two visits."""
     with np.load(ukb_dir / "lesions_atleast6_CVR.npz") as lesion_data:
         visit_1 = np.asarray(lesion_data["lesions_vis1"], dtype=float)
         visit_2 = np.asarray(lesion_data["lesions_vis2"], dtype=float)
@@ -155,6 +160,7 @@ def load_empirical_maps(
 
 
 def values_to_map(values: np.ndarray, voxel_ids: np.ndarray, shape: tuple[int, int, int]) -> np.ndarray:
+    """Place mask values into a 3D array using Fortran-order voxel IDs."""
     data = np.full(shape, np.nan, dtype=float)
     coordinates = np.unravel_index(voxel_ids - 1, shape, order="F")
     data[coordinates] = values
@@ -167,6 +173,7 @@ def load_relative_risk_map(
     anatomical: nib.Nifti1Image,
     voxel_ids: np.ndarray,
 ) -> np.ndarray:
+    """Load a coefficient map and exponentiate it into relative risks."""
     path = result_dir / f"estimate_{predictor}_GEE.nii.gz"
     if not path.is_file():
         raise FileNotFoundError(f"Coefficient map not found: {path}")
@@ -181,6 +188,7 @@ def load_relative_risk_map(
 
 
 def brain_crop(anatomical: np.ndarray, slices: tuple[int, ...]) -> tuple[tuple[int, int], tuple[int, int]]:
+    """Return shared plot limits covering all requested slices."""
     masks = [anatomical[:, :, slice_index].T > 0 for slice_index in slices]
     positive = np.argwhere(np.any(np.stack(masks, axis=0), axis=0))
     if positive.size == 0:
@@ -194,6 +202,7 @@ def brain_crop(anatomical: np.ndarray, slices: tuple[int, ...]) -> tuple[tuple[i
 
 
 def rr_scale(vmin: float, vmax: float):
+    """Build the relative-risk color scale and its labeled tick values."""
     ticks = (vmin, 0.5, 1.0, 1.5, vmax)
     cmap = plt.get_cmap("RdBu_r").copy()
     cmap.set_bad((0, 0, 0, 0))
@@ -219,6 +228,7 @@ def save_panel(
     overlay_alpha: float,
     dpi: int,
 ) -> None:
+    """Save one multi-slice panel in each requested output format."""
     figure = plt.figure(figsize=(6.4, 3.0), facecolor="white")
     grid = figure.add_gridspec(
         1,
@@ -299,6 +309,7 @@ def plot_maps(
     panels: list[tuple[str, str, np.ndarray, str]],
     args: argparse.Namespace,
 ) -> None:
+    """Render all empirical and model panels comprising Figure 6."""
     anatomical = np.asarray(anatomical_img.get_fdata(), dtype=float)
     slices = tuple(int(index) for index in args.slices)
     if len(slices) != 3:
@@ -344,6 +355,7 @@ def plot_maps(
 
 
 def main() -> None:
+    """Load model results and write the Figure 6 subfigures."""
     args = parse_args()
     validate_args(args)
     models = resolve_models(args.models)

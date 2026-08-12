@@ -74,6 +74,7 @@ PREDICTORS = (
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse Table 7 model, binning, and output options."""
     parser = argparse.ArgumentParser(
         description="Create Table 7: RR-PGEE relative risks by empirical lesion incidence."
     )
@@ -118,10 +119,12 @@ def parse_args() -> argparse.Namespace:
 
 
 def resolve_models(models: tuple[str, ...] | list[str]) -> tuple[str, ...]:
+    """Expand the ``all`` option to every Table 7 model."""
     return DEFAULT_MODELS if "all" in models else tuple(models)
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    """Validate Table 7 paths, model selection, and worker options."""
     for label, path in (
         ("UKB input directory", args.ukb_dir),
         ("voxel ID file", args.voxel_ids),
@@ -145,6 +148,7 @@ def validate_args(args: argparse.Namespace) -> None:
 
 
 def load_voxel_ids(path: Path, max_voxels: int | None = None) -> np.ndarray:
+    """Load unique one-based voxel IDs, optionally limiting the mask."""
     voxel_ids = np.loadtxt(path, dtype=int).reshape(-1)
     if voxel_ids.size == 0 or np.any(voxel_ids < 1):
         raise ValueError("Voxel IDs must be nonempty positive one-based indices")
@@ -158,6 +162,7 @@ def load_voxel_ids(path: Path, max_voxels: int | None = None) -> np.ndarray:
 def load_empirical_values(
     ukb_dir: Path, voxel_ids: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray, int]:
+    """Load visit-1 incidence, its change, and participant count."""
     with np.load(ukb_dir / "lesions_atleast6_CVR.npz") as lesion_data:
         visit_1 = np.asarray(lesion_data["lesions_vis1"], dtype=float)
         visit_2 = np.asarray(lesion_data["lesions_vis2"], dtype=float)
@@ -173,6 +178,7 @@ def load_empirical_values(
 def load_exponentiated_estimates(
     result_dir: Path, voxel_ids: np.ndarray, anatomical: Path
 ) -> dict[str, np.ndarray]:
+    """Load aligned coefficient maps and exponentiate their estimates."""
     template = nib.load(anatomical)
     estimates: dict[str, np.ndarray] = {}
     for predictor, _ in PREDICTORS:
@@ -182,6 +188,7 @@ def load_exponentiated_estimates(
         image = nib.load(path)
         if image.shape != template.shape or not np.allclose(image.affine, template.affine):
             raise ValueError(f"Coefficient map is not aligned with anatomical image: {path}")
+        # Keep coefficient lookup aligned with the one-based UKB voxel mask.
         beta_values = np.asarray(image.get_fdata(), dtype=float).ravel(order="F")[voxel_ids - 1]
         with np.errstate(over="ignore", invalid="ignore"):
             estimates[predictor] = np.exp(beta_values)
@@ -189,6 +196,7 @@ def load_exponentiated_estimates(
 
 
 def load_fit_mask(result_dir: Path, n_voxels: int) -> tuple[np.ndarray, int, int]:
+    """Return valid-fit flags and counts of failed or non-converged fits."""
     summary_path = result_dir / "fit_summary.npz"
     if not summary_path.is_file():
         return np.ones(n_voxels, dtype=bool), 0, 0
@@ -203,6 +211,7 @@ def load_fit_mask(result_dir: Path, n_voxels: int) -> tuple[np.ndarray, int, int
 
 
 def mean_sd(values: np.ndarray, decimals: int) -> str:
+    """Format a mean and sample standard deviation."""
     values = np.asarray(values, dtype=float)
     return f"{np.mean(values):.{decimals}f} ({np.std(values, ddof=1):.{decimals}f})"
 
@@ -213,6 +222,7 @@ def summarise_table(
     exponentiated_estimates: dict[str, np.ndarray],
     fit_mask: np.ndarray,
 ) -> tuple[pd.DataFrame, int]:
+    """Summarise fitted effects within the predefined incidence bins."""
     finite = fit_mask & np.isfinite(p1) & np.isfinite(p2_minus_p1)
     for values in exponentiated_estimates.values():
         finite &= np.isfinite(values)
@@ -241,6 +251,7 @@ def write_latex_table(
     n_regressions: int,
     n_excluded: int,
 ) -> None:
+    """Write one publication-format Table 7 LaTeX table."""
     body_rows = []
     for index, row in enumerate(table.itertuples(index=False)):
         if index == len(table) - 1:
@@ -285,6 +296,7 @@ $p_1$ & \\# voxels & \\multicolumn{{5}}{{c|}}{{Mean (SD)}} \\\\
 
 
 def output_paths(args: argparse.Namespace, model: str) -> tuple[Path, Path]:
+    """Resolve CSV and LaTeX output paths for a model."""
     spec = MODEL_SPECS[model]
     csv_output = args.output or args.output_dir / str(spec["csv_name"])
     latex_output = args.latex_output or args.output_dir / str(spec["latex_name"])
@@ -299,6 +311,7 @@ def summarise_model(
     p2_minus_p1: np.ndarray,
     n_subjects: int,
 ) -> None:
+    """Fit or load one model and write its Table 7 outputs."""
     result_dir = ensure_model_outputs(
         model,
         ukb_dir=args.ukb_dir,
@@ -342,6 +355,7 @@ def summarise_model(
 
 
 def main() -> None:
+    """Calculate and write Table 7 for the requested models."""
     args = parse_args()
     validate_args(args)
     models = resolve_models(args.models)

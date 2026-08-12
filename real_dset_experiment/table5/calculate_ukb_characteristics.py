@@ -137,6 +137,7 @@ N: number of participants; SD: standard deviation; CVR: cerebrovascular risk.
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse Table 5 input and output paths."""
     parser = argparse.ArgumentParser(
         description="Calculate UK Biobank cohort characteristics and write LaTeX."
     )
@@ -146,6 +147,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Load cohort data and write the Table 5 LaTeX output."""
     args = parse_args()
     frame = load_ukb_data(args.input)
     args.output.parent.mkdir(parents=True, exist_ok=True)

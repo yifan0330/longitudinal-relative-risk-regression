@@ -19,6 +19,7 @@ from .run_simulation import run_scenarios
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse benchmark command-line options."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--replications", type=int, default=20)
     parser.add_argument("--workers", type=int, default=min(4, os.cpu_count() or 1))
@@ -32,6 +33,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Run the configured timing comparisons and write their summary CSV."""
     args = parse_args()
     if args.replications < 1:
         raise SystemExit("--replications must be positive.")

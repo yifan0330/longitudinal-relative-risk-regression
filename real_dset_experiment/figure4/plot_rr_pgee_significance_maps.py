@@ -51,6 +51,7 @@ PREDICTORS = (
 
 
 def parse_args(default_model: str = "rr-pgee") -> argparse.Namespace:
+    """Parse options for a coefficient significance-map figure."""
     parser = argparse.ArgumentParser(
         description="Plot UKB coefficient significance maps in a 2-by-4 layout."
     )
@@ -113,6 +114,7 @@ def parse_args(default_model: str = "rr-pgee") -> argparse.Namespace:
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    """Validate paths and plotting parameters before loading model maps."""
     for label, path in (
         ("UKB input directory", args.ukb_dir),
         ("anatomical image", args.anatomical),
@@ -135,6 +137,7 @@ def validate_args(args: argparse.Namespace) -> None:
 
 
 def load_voxel_ids(path: Path) -> np.ndarray:
+    """Load unique one-based voxel indices used by the UKB analysis mask."""
     voxel_ids = np.loadtxt(path, dtype=int).reshape(-1)
     if voxel_ids.size == 0 or np.any(voxel_ids < 1):
         raise ValueError("Voxel IDs must be nonempty positive one-based indices")
@@ -160,6 +163,7 @@ def benjamini_hochberg(p_values: np.ndarray) -> np.ndarray:
 def filter_zscores(
     zscores: np.ndarray, significance: str, z_threshold: float, fdr_alpha: float
 ) -> np.ndarray:
+    """Mask z-scores according to fixed, FDR, or unfiltered significance."""
     finite = np.isfinite(zscores)
     if significance == "fixed":
         keep = finite & (np.abs(zscores) > z_threshold)
@@ -175,6 +179,7 @@ def filter_zscores(
 def load_maps(
     args: argparse.Namespace,
 ) -> tuple[np.ndarray, list[tuple[str, np.ndarray, int]]]:
+    """Load aligned coefficient maps and apply the selected display filter."""
     anatomical_image = nib.load(args.anatomical)
     anatomical = np.asarray(anatomical_image.get_fdata(), dtype=float)
     if anatomical.ndim != 3 or args.slice > anatomical.shape[2]:
@@ -203,6 +208,7 @@ def load_maps(
                 f"{args.model.upper()} map is not aligned with the anatomical: {path}"
             )
         data = np.asarray(image.get_fdata(), dtype=float)
+        # Flatten in the same order as the UKB mask IDs, not NumPy's default C order.
         zscores = data.ravel(order="F")[voxel_ids - 1]
         filtered = filter_zscores(
             zscores, args.significance, args.z_threshold, args.fdr_alpha
@@ -220,6 +226,7 @@ def load_maps(
 
 
 def brain_crop(anatomical_slice: np.ndarray) -> tuple[tuple[int, int], tuple[int, int]]:
+    """Return plot limits around the non-zero portion of an anatomical slice."""
     positive = np.argwhere(anatomical_slice > 0)
     if positive.size == 0:
         return (0, anatomical_slice.shape[1] - 1), (0, anatomical_slice.shape[0] - 1)
@@ -242,6 +249,7 @@ def plot_maps(
     maps: list[tuple[str, np.ndarray, int]],
     args: argparse.Namespace,
 ) -> None:
+    """Render the eight predictor maps in the Figure 4 layout."""
     slice_index = args.slice - 1
     anatomical_slice = anatomical[:, :, slice_index].T
     positive = anatomical_slice[anatomical_slice > 0]
@@ -332,6 +340,7 @@ def plot_maps(
 
 
 def main(default_model: str = "rr-pgee") -> None:
+    """Prepare model outputs, load maps, and write a significance figure."""
     args = parse_args(default_model)
     validate_args(args)
     args.result_dir = ensure_model_outputs(

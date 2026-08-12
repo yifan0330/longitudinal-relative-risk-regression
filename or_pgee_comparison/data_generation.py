@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from dataclasses import dataclass
 from collections.abc import Sequence
 
@@ -13,10 +12,17 @@ from scipy.stats import norm
 from .config import REPO_ROOT, Scenario, rep_seed
 
 SIM_CODE_DIR = REPO_ROOT / "Simulations" / "code"
-if str(SIM_CODE_DIR) not in sys.path:
-    sys.path.insert(0, str(SIM_CODE_DIR))
 
-from source_simdata import gen_dataPP, simulate_correlated_bernoulli, xch  # noqa: E402
+
+def _historical_generators():
+    """Load the historical simulation helpers only when data generation is requested."""
+    import sys
+
+    if str(SIM_CODE_DIR) not in sys.path:
+        sys.path.insert(0, str(SIM_CODE_DIR))
+    from source_simdata import gen_dataPP, simulate_correlated_bernoulli, xch
+
+    return gen_dataPP, simulate_correlated_bernoulli, xch
 
 
 @dataclass(frozen=True)
@@ -53,6 +59,7 @@ def generate_dataset(scenario: Scenario, replication: int) -> DatasetBundle:
     if scenario.confounded:
         return _generate_confounded_dataset(scenario, replication, rng)
 
+    gen_dataPP, _simulate_correlated_bernoulli, _xch = _historical_generators()
     data = gen_dataPP(
         beta=scenario.beta,
         nc=scenario.n_subjects,
@@ -98,6 +105,7 @@ def generate_standard_datasets_broadcast(
     raw_probs = np.exp(np.einsum("rsva,a->rsv", design, np.asarray(scenario.beta, dtype=float)))
     probs = np.clip(raw_probs, 1e-12, 1 - 1e-12)
 
+    _gen_dataPP, _simulate_correlated_bernoulli, xch = _historical_generators()
     corr = xch(n_visits, scenario.rho)
     z = rng.multivariate_normal(np.zeros(n_visits), corr, size=(n_rep, n_subjects))
     y = (z <= norm.ppf(probs)).astype(int)
@@ -158,6 +166,7 @@ def _generate_confounded_dataset(
     probability_clip_rate = float(np.mean((raw_probs < 1e-12) | (raw_probs > 1 - 1e-12)))
     probs = np.clip(raw_probs, 1e-12, 1 - 1e-12)
 
+    _gen_dataPP, simulate_correlated_bernoulli, xch = _historical_generators()
     y_parts: list[np.ndarray] = []
     start = 0
     for size in sizes:

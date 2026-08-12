@@ -18,44 +18,44 @@ class ModuleCommand:
 
 
 FIGURE_COMMANDS = (
-    ModuleCommand("real_dset_experiment.figure3.plot_ukb_empirical_maps"),
+    ModuleCommand("real_dset_experiment.plot_figure3"),
     *(
         ModuleCommand(
-            "real_dset_experiment.figure4.plot_rr_pgee_significance_maps",
+            "real_dset_experiment.plot_figure4",
             ("--model", model, "--use-cache"),
         )
         for model in ("rr-gee", "rr-pgee", "or-gee", "or-pgee")
     ),
     *(
         ModuleCommand(
-            "real_dset_experiment.figure5.plot_rr_alpha_phi_maps",
+            "real_dset_experiment.plot_figure5",
             ("--model", model, "--use-cache"),
         )
         for model in ("rr-gee", "rr-pgee", "or-gee", "or-pgee")
     ),
     ModuleCommand(
-        "real_dset_experiment.figure6.plot_rr_pgee_relative_risk_maps",
+        "real_dset_experiment.plot_figure6",
         ("--models", "all", "--use-cache"),
     ),
     ModuleCommand(
-        "real_dset_experiment.figure7.plot_age_relative_risk_comparison",
+        "real_dset_experiment.plot_figure7",
         ("--use-cache",),
     ),
-    ModuleCommand("real_dset_experiment.figureB3.plot_figureB3"),
+    ModuleCommand("real_dset_experiment.plot_figure_b3"),
 )
 
 TABLE_COMMANDS = (
-    ModuleCommand("real_dset_experiment.table5.calculate_ukb_characteristics"),
+    ModuleCommand("real_dset_experiment.table_5"),
     ModuleCommand(
-        "real_dset_experiment.table6.calculate_significant_coefficients",
+        "real_dset_experiment.table6_rr",
         ("--use-cache",),
     ),
     ModuleCommand(
-        "real_dset_experiment.table6.calculate_or_significant_coefficients",
+        "real_dset_experiment.table6_or",
         ("--use-cache",),
     ),
     ModuleCommand(
-        "real_dset_experiment.table7.calculate_rr_relative_risk_by_incidence",
+        "real_dset_experiment.table_7",
         ("--models", "all", "--use-cache"),
     ),
 )
@@ -87,12 +87,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _run_module(command_spec: ModuleCommand) -> None:
+    """Run one reproduction module in a child Python process."""
     command = [sys.executable, "-m", command_spec.module, *command_spec.arguments]
     print(f"+ {' '.join(command)}", flush=True)
     subprocess.run(command, check=True)
 
 
 def _fit_arguments(args: argparse.Namespace) -> tuple[str, ...]:
+    """Translate workflow options into model-fitting command-line arguments."""
     arguments = ["--models", "all"]
     if not args.rerun_models:
         arguments.append("--use-cache")
@@ -108,6 +110,7 @@ def _commands_with_cache_policy(
     *,
     rerun_models: bool,
 ) -> tuple[ModuleCommand, ...]:
+    """Apply the requested cache policy to figure and table commands."""
     if not rerun_models:
         return tuple(commands)
     return tuple(

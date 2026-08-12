@@ -25,6 +25,7 @@ METHOD_LABELS = {"RR-GEE": "RR-GEE", "RR-PGEE": "RR-PGEE"}
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse Figure B1 plotting options."""
     parser = argparse.ArgumentParser(
         description="Create Figure B1: BEC histograms for RR-GEE and RR-PGEE."
     )
@@ -45,6 +46,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    """Validate input and positive plotting parameters."""
     if not args.replications.exists():
         raise FileNotFoundError(f"Replication file not found: {args.replications}")
     if args.x_max <= 0 or args.threshold <= 0 or args.bin_width <= 0 or args.dpi <= 0:
@@ -52,6 +54,7 @@ def validate_args(args: argparse.Namespace) -> None:
 
 
 def load_bec_values(path: Path, scenario: str) -> dict[str, np.ndarray]:
+    """Load finite BEC values for the requested scenario and methods."""
     replications = pd.read_csv(path)
     required = {"scenario", "method", "bec_count"}
     missing = required.difference(replications.columns)
@@ -69,6 +72,7 @@ def load_bec_values(path: Path, scenario: str) -> dict[str, np.ndarray]:
 
 
 def add_strip(axis: plt.Axes, label: str) -> None:
+    """Add the method label strip above a histogram axis."""
     strip = Rectangle(
         (0.0, 1.005),
         1.0,
@@ -93,6 +97,7 @@ def add_strip(axis: plt.Axes, label: str) -> None:
 
 
 def plot_figure(values: dict[str, np.ndarray], args: argparse.Namespace) -> None:
+    """Render and save the paired BEC histograms."""
     plt.rcParams.update(
         {
             "font.family": "serif",
@@ -156,6 +161,7 @@ def plot_figure(values: dict[str, np.ndarray], args: argparse.Namespace) -> None
 
 
 def print_summary(values: dict[str, np.ndarray], args: argparse.Namespace) -> None:
+    """Print counts and summary statistics for the plotted BEC values."""
     print(
         "Base parameters: "
         f"beta=({DEFAULT_BETA[0]:g}, {DEFAULT_BETA[1]:g}, {DEFAULT_BETA[2]:g}), "
@@ -174,6 +180,7 @@ def print_summary(values: dict[str, np.ndarray], args: argparse.Namespace) -> No
 
 
 def main() -> int:
+    """Load BEC diagnostics, print their summary, and save Figure B1."""
     args = parse_args()
     validate_args(args)
     values = load_bec_values(args.replications, args.scenario)

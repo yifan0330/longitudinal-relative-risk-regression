@@ -60,6 +60,8 @@ RR_GEE_MAX_STEP = 2.0
 
 @dataclass(frozen=True)
 class UKBDesign:
+    """Longitudinal UKB design matrix and voxel-wise binary outcomes."""
+
     X: np.ndarray
     X_clusters: np.ndarray
     lesions1: np.ndarray
@@ -68,36 +70,44 @@ class UKBDesign:
 
     @property
     def n_subjects(self) -> int:
+        """Return the number of participants represented by the design."""
         return self.X_clusters.shape[0]
 
     @property
     def n_voxels(self) -> int:
+        """Return the number of voxels in the analysis mask."""
         return self.lesions1.shape[0]
 
     @property
     def n_coefficients(self) -> int:
+        """Return the number of fitted regression coefficients."""
         return self.X.shape[1]
 
 
 def model_result_dir(results_root: Path, model: str) -> Path:
+    """Return the canonical cached-results directory for a model name."""
     if model not in MODEL_NAMES:
         raise ValueError(f"Unknown model {model!r}; choose from {MODEL_NAMES}")
     return results_root / model.replace("-", "_")
 
 
 def model_is_poisson(model: str) -> bool:
+    """Return whether a model uses the log-link Poisson outcome formulation."""
     return model.startswith("rr-")
 
 
 def model_is_penalized(model: str) -> bool:
+    """Return whether a model uses the penalized likelihood formulation."""
     return model.endswith("-pgee")
 
 
 def default_n_jobs() -> int:
+    """Choose a conservative worker count for voxel-wise fitting."""
     return max(1, min(8, (os.cpu_count() or 1)))
 
 
 def load_voxel_ids(path: Path) -> np.ndarray:
+    """Load and validate one-based voxel indices from a text file."""
     voxel_ids = np.loadtxt(path, dtype=int).reshape(-1)
     if voxel_ids.size == 0 or np.any(voxel_ids < 1):
         raise ValueError(f"Voxel IDs must be nonempty positive one-based indices: {path}")
@@ -107,6 +117,7 @@ def load_voxel_ids(path: Path) -> np.ndarray:
 
 
 def load_ukb_design(ukb_dir: Path = DEFAULT_UKB_DIR, max_voxels: int | None = None) -> UKBDesign:
+    """Load UKB covariates and lesion matrices into the model design."""
     with (ukb_dir / "CVR_9June2021.pkl").open("rb") as stream:
         payload = pickle.load(stream)
     if not isinstance(payload, dict) or "complete_df" not in payload:
@@ -264,6 +275,7 @@ def _fit_one(y: np.ndarray, design: UKBDesign, model: str) -> dict[str, Any]:
     beta0 = _initial_beta(y, poisson, design.n_coefficients)
 
     def func(beta: np.ndarray) -> tuple[float, np.ndarray]:
+        """Return a finite objective-gradient pair for the optimizer."""
         value, gradient = _objective_and_gradient(beta, y, design.X, poisson, firth)
         if not np.isfinite(value) or np.any(~np.isfinite(gradient)):
             return np.inf, np.zeros_like(beta)
@@ -474,6 +486,7 @@ def fit_model(
     n_jobs: int | None = None,
     chunk_size: int = RR_GEE_CHUNK_SIZE,
 ) -> tuple[UKBDesign, dict[str, np.ndarray]]:
+    """Fit one supported model across the requested UKB voxel set."""
     if model not in MODEL_NAMES:
         raise ValueError(f"Unknown model {model!r}; choose from {MODEL_NAMES}")
     design = load_ukb_design(ukb_dir, max_voxels=max_voxels)
@@ -514,6 +527,7 @@ def _write_nifti_map(
     if voxel_ids.max() > np.prod(template.shape):
         raise ValueError("Voxel IDs exceed the anatomical image grid")
     data = np.full(template.shape, np.nan, dtype=np.float32)
+    # Preserve the R/Fortran voxel numbering used by the committed UKB maps.
     coordinates = np.unravel_index(voxel_ids - 1, template.shape, order="F")
     data[coordinates] = np.asarray(values, dtype=float)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -527,6 +541,7 @@ def write_model_outputs(
     arrays: dict[str, np.ndarray],
     anatomical: Path = DEFAULT_ANATOMICAL,
 ) -> None:
+    """Write coefficient maps and fit metadata using the established filenames."""
     template = nib.load(str(anatomical))
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -551,6 +566,7 @@ def write_model_outputs(
 
 
 def required_zscore_maps(result_dir: Path) -> list[Path]:
+    """Return the predictor z-score maps required by cached workflows."""
     return [result_dir / f"zscore_{predictor}_GEE.nii.gz" for predictor in PREDICTORS]
 
 
@@ -566,6 +582,7 @@ def ensure_model_outputs(
     chunk_size: int = RR_GEE_CHUNK_SIZE,
     force_rerun: bool = True,
 ) -> Path:
+    """Reuse complete cached maps or fit and write a model’s outputs."""
     output_dir = result_dir or model_result_dir(results_root, model)
     maps_exist = all(path.is_file() for path in required_zscore_maps(output_dir))
     if maps_exist and not force_rerun:
@@ -595,6 +612,7 @@ def ensure_model_outputs(
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line options for raw-input UKB model fitting."""
     parser = argparse.ArgumentParser(
         description="Rerun UKB voxel experiments from raw inputs using Python L-BFGS fits."
     )
@@ -625,6 +643,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Run the requested model fits from the command line."""
     args = parse_args()
     if args.n_jobs <= 0:
         raise ValueError("--n-jobs must be positive")

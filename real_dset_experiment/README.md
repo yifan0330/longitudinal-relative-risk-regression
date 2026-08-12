@@ -40,9 +40,15 @@ data and cached model results; it is not recreated by the plotting commands.
 
 * `paths.py` defines the canonical filesystem configuration.
 * `ukb_python_experiment.py` fits the four longitudinal models.
-* `figure3`–`figure7` and `figureB3` generate figures.
-* `table5`–`table7` generate manuscript tables.
+* `plot_figure3.py`–`plot_figure7.py` and `plot_figure_b3.py` are the
+  recommended figure entry points.
+* `table_5.py`, `table6_rr.py`, `table6_or.py`, and `table_7.py` are the
+  recommended table entry points.
+* The historical `figure*/` and `table*/` modules remain available as
+  compatibility entry points and retain their original output directories.
 * `cli.py` and `__main__.py` provide the reproducible command-line workflow.
 
-Each plotting or table module remains directly executable with `python -m`,
-which makes individual manuscript items easy to rerun and debug.
+For example, run `python -m real_dset_experiment.plot_figure3` or
+`python -m real_dset_experiment.table6_rr` to rerun one manuscript item.
+Each historical plotting or table module also remains directly executable
+with `python -m`.

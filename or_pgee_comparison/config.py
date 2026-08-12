@@ -43,14 +43,17 @@ class Scenario:
 
     @property
     def true_beta_b(self) -> float:
+        """Return the simulation's true exposure coefficient."""
         return float(self.beta[1])
 
     @property
     def true_rr(self) -> float:
+        """Return the true RR implied by the log-link exposure coefficient."""
         return float(np.exp(self.true_beta_b))
 
     @property
     def scenario_type(self) -> str:
+        """Return the label used to distinguish standard and confounded DGPs."""
         return "confounded" if self.confounded else "standard"
 
 

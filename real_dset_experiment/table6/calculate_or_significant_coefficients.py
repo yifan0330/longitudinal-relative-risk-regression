@@ -40,6 +40,7 @@ PREDICTORS = (
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse OR significance-counting and output options."""
     parser = argparse.ArgumentParser(
         description=(
             "Count significant coefficient z statistics for OR-GEE and OR-PGEE "
@@ -67,6 +68,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    """Validate OR table paths and multiple-testing parameters."""
     if not 0 < args.fdr_alpha < 1:
         raise ValueError("--fdr-alpha must lie strictly between 0 and 1")
     if args.z_threshold <= 0:
@@ -85,6 +87,7 @@ def validate_args(args: argparse.Namespace) -> None:
 
 
 def load_voxel_ids(path: Path) -> np.ndarray:
+    """Load unique positive one-based analysis-mask voxel IDs."""
     voxel_ids = np.loadtxt(path, dtype=int).reshape(-1)
     if voxel_ids.size == 0 or np.any(voxel_ids < 1):
         raise ValueError("Voxel IDs must be nonempty positive one-based indices")
@@ -94,11 +97,13 @@ def load_voxel_ids(path: Path) -> np.ndarray:
 
 
 def analysis_voxel_ids(args: argparse.Namespace) -> np.ndarray:
+    """Apply the optional voxel limit to the analysis mask."""
     voxel_ids = load_voxel_ids(args.voxel_ids)
     return voxel_ids[: args.max_voxels] if args.max_voxels is not None else voxel_ids
 
 
 def load_zscores(result_dir: Path, predictor: str, voxel_ids: np.ndarray) -> np.ndarray:
+    """Load one predictor’s OR z-scores at the analysis-mask voxels."""
     path = result_dir / f"zscore_{predictor}_GEE.nii.gz"
     if not path.is_file():
         raise FileNotFoundError(f"OR z-statistic map not found: {path}")
@@ -125,6 +130,7 @@ def benjamini_hochberg(p_values: np.ndarray) -> np.ndarray:
 def count_significant(
     zscores: np.ndarray, fdr_alpha: float, z_threshold: float
 ) -> tuple[int, int, int]:
+    """Count FDR-significant, threshold-significant, and finite z-scores."""
     finite = np.isfinite(zscores)
     p_values = np.full(zscores.shape, np.nan, dtype=float)
     p_values[finite] = 2 * stats.norm.sf(np.abs(zscores[finite]))
@@ -134,6 +140,7 @@ def count_significant(
 
 
 def calculate_counts(args: argparse.Namespace) -> pd.DataFrame:
+    """Fit or load both OR methods and assemble their count table."""
     voxel_ids = analysis_voxel_ids(args)
     or_gee_dir = ensure_model_outputs(
         "or-gee",
@@ -187,6 +194,7 @@ def calculate_counts(args: argparse.Namespace) -> pd.DataFrame:
 def write_latex_table(
     counts: pd.DataFrame, output: Path, n_voxels: int, z_threshold: float
 ) -> None:
+    """Write the publication-format OR significant-voxels table."""
     threshold_label = f"{z_threshold:g}"
     rows = []
     for row in counts.itertuples(index=False, name=None):
@@ -237,6 +245,7 @@ def write_latex_table(
 
 
 def main() -> None:
+    """Calculate and write Table 6 OR significance outputs."""
     args = parse_args()
     validate_args(args)
     voxel_ids = analysis_voxel_ids(args)

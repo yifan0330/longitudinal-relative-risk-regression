@@ -78,6 +78,8 @@ def wald_p_values(replications_path: str | Path) -> pd.DataFrame:
     )
     replications["null_log_effect"] = replications["true_beta_b"]
     is_or_method = replications["method"].isin(OR_METHODS)
+    # Wald tests for transformed OR estimates must use the true effect on the
+    # original log-OR scale, not the log-RR value used by the simulation.
     replications.loc[is_or_method, "null_log_effect"] = _or_null_log_effect(
         replications.loc[is_or_method, "true_rr"],
         replications.loc[is_or_method, "p0_hat"],
@@ -287,6 +289,7 @@ def save_pp_plot(
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse PP-plot input, output, and confidence-band options."""
     parser = argparse.ArgumentParser(
         description="Generate PP-plots of simulation Wald p-values.",
     )
@@ -304,6 +307,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Generate one PP-plot for each scenario in the replication results."""
     args = parse_args()
     p_values = wald_p_values(args.replications)
     table4 = table4_statistics(args.table4)

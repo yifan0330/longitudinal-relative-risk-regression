@@ -34,6 +34,7 @@ CHUNK_SIZE = 512
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse BEC calculation, histogram, and output options."""
     parser = argparse.ArgumentParser(
         description="Create Figure B3: UKB BEC histograms for RR-GEE and RR-PGEE."
     )
@@ -55,6 +56,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    """Validate BEC input paths and positive plotting parameters."""
     if not args.results_root.exists():
         raise FileNotFoundError(f"Results root not found: {args.results_root}")
     if args.x_max <= 0 or args.threshold <= 0 or args.bin_width <= 0 or args.dpi <= 0:
@@ -62,8 +64,10 @@ def validate_args(args: argparse.Namespace) -> None:
 
 
 def load_nifti_values(path: Path, voxel_ids: np.ndarray) -> np.ndarray:
+    """Read values at one-based UKB mask indices from a NIfTI image."""
     image = nib.load(str(path))
     data = np.asanyarray(image.dataobj)
+    # The map files retain the one-based R/Fortran voxel numbering from UKB.
     coordinates = np.unravel_index(voxel_ids - 1, image.shape, order="F")
     return np.asarray(data[coordinates], dtype=float)
 
@@ -73,6 +77,7 @@ def load_method_arrays(
     method: str,
     voxel_ids: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Load coefficient, alpha, and phi maps for one fitted method."""
     method_dir = results_root / method
     beta = np.column_stack(
         [
@@ -86,6 +91,7 @@ def load_method_arrays(
 
 
 def safe_inverse_stack(matrices: np.ndarray) -> np.ndarray:
+    """Invert a stack of matrices, using pseudoinverses when necessary."""
     try:
         return np.linalg.inv(matrices)
     except np.linalg.LinAlgError:
@@ -98,6 +104,7 @@ def model_se_from_information(
     alpha: np.ndarray,
     phi: np.ndarray,
 ) -> np.ndarray:
+    """Calculate model-based standard errors from fitted information matrices."""
     n_voxels, n_coefficients = beta.shape
     output = np.full((n_voxels, n_coefficients), np.nan, dtype=float)
     finite_rows = np.all(np.isfinite(beta), axis=1)
@@ -141,6 +148,7 @@ def model_se_from_information(
 
 
 def first_iteration_model_se(x_clusters: np.ndarray, outcomes: np.ndarray) -> np.ndarray:
+    """Calculate standard errors after the initial Poisson iteration."""
     n_subjects, n_visits, n_coefficients = x_clusters.shape
     n_voxels = outcomes.shape[1]
     x = x_clusters.reshape(n_subjects * n_visits, n_coefficients)
@@ -180,6 +188,7 @@ def first_iteration_model_se(x_clusters: np.ndarray, outcomes: np.ndarray) -> np
 
 
 def compute_bec_values(args: argparse.Namespace) -> dict[str, np.ndarray]:
+    """Compute and cache boundary-estimates-criterion values by method."""
     design = load_ukb_design()
     outcomes = np.stack((design.lesions1.T, design.lesions2.T), axis=1).reshape(
         design.n_subjects * 2,
@@ -212,6 +221,7 @@ def compute_bec_values(args: argparse.Namespace) -> dict[str, np.ndarray]:
 
 
 def add_strip(axis: plt.Axes, label: str) -> None:
+    """Add the labeled header strip used above each histogram."""
     strip = Rectangle(
         (0.0, 1.005),
         1.0,
@@ -236,6 +246,7 @@ def add_strip(axis: plt.Axes, label: str) -> None:
 
 
 def plot_figure(bec_values: dict[str, np.ndarray], args: argparse.Namespace) -> pd.DataFrame:
+    """Plot BEC histograms and write the accompanying summary CSV."""
     plt.rcParams.update(
         {
             "font.family": "serif",
@@ -326,6 +337,7 @@ def plot_figure(bec_values: dict[str, np.ndarray], args: argparse.Namespace) -> 
 
 
 def main() -> None:
+    """Compute BEC values and write Figure B3 outputs."""
     args = parse_args()
     validate_args(args)
     bec_values = compute_bec_values(args)

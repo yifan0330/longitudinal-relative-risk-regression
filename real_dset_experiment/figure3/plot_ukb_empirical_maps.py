@@ -74,6 +74,7 @@ def reconstruct_maps(
         where=p1 > 0,
     )
 
+    # UKB voxel IDs are one-based and follow the original R/Fortran ordering.
     coordinates = np.unravel_index(voxel_ids - 1, shape, order="F")
     sqrt_incidence_map = np.full(shape, np.nan)
     relative_risk_map = np.full(shape, np.nan)
@@ -187,11 +188,13 @@ def repack_slice_axes(display, gap: float) -> None:
 
 
 def output_path(base_output: Path, suffix: str) -> Path:
+    """Insert a map suffix before the requested output extension."""
     extension = base_output.suffix or ".png"
     return base_output.with_name(f"{base_output.stem}_{suffix}{extension}")
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse Figure 3 input, slice, and output options."""
     parser = argparse.ArgumentParser(
         description=(
             "Plot separate empirical UKB lesion incidence and visit-2/visit-1 risk maps."
@@ -223,6 +226,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Load empirical UKB data and write the two Figure 3 maps."""
     args = parse_args()
     matplotlib.rcParams["savefig.dpi"] = args.dpi
     visit_1, visit_2, voxel_ids, anatomical_img = load_inputs(

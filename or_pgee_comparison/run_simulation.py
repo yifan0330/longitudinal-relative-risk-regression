@@ -81,6 +81,7 @@ from .postprocess import build_tables
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse simulation, scenario-selection, and output options."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=("smoke", "full"), default="smoke")
     parser.add_argument("--scenario", help="Run only one scenario by name.")
@@ -134,6 +135,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Run selected scenarios and write replication, diagnostic, and table outputs."""
     args = parse_args()
     scenarios = _selected_scenarios(args)
     if args.scenario:
@@ -193,6 +195,8 @@ def run_scenarios(
     jobs = [
         (scenario, replication, fit_engine, max_iter)
         for scenario in scenario_tuple
+        # Replication numbers are one-based so regenerated methods stay paired
+        # with the published simulation streams.
         for replication in range(1, scenario.n_replications + 1)
     ]
     if not jobs:

@@ -36,6 +36,7 @@ METHODS = ("rr-gee", "rr-pgee", "or-pgee")
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse Figure 7 data, filtering, and plotting options."""
     parser = argparse.ArgumentParser(
         description="Create Figure 7 comparing age-at-visit-1 relative risks."
     )
@@ -76,6 +77,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    """Validate Figure 7 paths and comparison parameters."""
     for label, path in (
         ("UKB input directory", args.ukb_dir),
         ("anatomical image", args.anatomical),
@@ -96,6 +98,7 @@ def validate_args(args: argparse.Namespace) -> None:
 
 
 def load_voxel_ids(path: Path, max_voxels: int | None = None) -> np.ndarray:
+    """Load unique one-based voxel indices for the comparison."""
     voxel_ids = np.loadtxt(path, dtype=int).reshape(-1)
     if voxel_ids.size == 0 or np.any(voxel_ids < 1):
         raise ValueError("Voxel IDs must be nonempty positive one-based indices")
@@ -107,6 +110,7 @@ def load_voxel_ids(path: Path, max_voxels: int | None = None) -> np.ndarray:
 
 
 def load_visit1_incidence(ukb_dir: Path, n_voxels: int) -> tuple[np.ndarray, int]:
+    """Return visit-1 incidence values and participant count."""
     with np.load(ukb_dir / "lesions_atleast6_CVR.npz") as lesion_data:
         visit_1 = np.asarray(lesion_data["lesions_vis1"], dtype=float)
     if visit_1.shape[0] < n_voxels:
@@ -116,6 +120,7 @@ def load_visit1_incidence(ukb_dir: Path, n_voxels: int) -> tuple[np.ndarray, int
 
 
 def load_beta(result_dir: Path, voxel_ids: np.ndarray, anatomical: Path) -> np.ndarray:
+    """Load the age coefficient at the selected anatomical voxels."""
     template = nib.load(anatomical)
     path = result_dir / "estimate_baseAge_GEE.nii.gz"
     if not path.is_file():
@@ -127,6 +132,7 @@ def load_beta(result_dir: Path, voxel_ids: np.ndarray, anatomical: Path) -> np.n
 
 
 def load_fit_mask(result_dir: Path, n_voxels: int) -> tuple[np.ndarray, int, int]:
+    """Return fit validity and counts of failed or non-converged fits."""
     summary_path = result_dir / "fit_summary.npz"
     if not summary_path.is_file():
         return np.ones(n_voxels, dtype=bool), 0, 0
@@ -137,10 +143,12 @@ def load_fit_mask(result_dir: Path, n_voxels: int) -> tuple[np.ndarray, int, int
 
 
 def odds_ratio_to_relative_risk(odds_ratio: np.ndarray, baseline_risk: np.ndarray) -> np.ndarray:
+    """Convert odds ratios to relative risks at a given baseline risk."""
     return odds_ratio / (1.0 - baseline_risk + baseline_risk * odds_ratio)
 
 
 def load_method_values(args: argparse.Namespace, voxel_ids: np.ndarray, p1: np.ndarray) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray], dict[str, tuple[int, int]]]:
+    """Load comparable age effects, fit masks, and fit-quality summaries."""
     values: dict[str, np.ndarray] = {}
     masks: dict[str, np.ndarray] = {}
     summaries: dict[str, tuple[int, int]] = {}
@@ -158,6 +166,8 @@ def load_method_values(args: argparse.Namespace, voxel_ids: np.ndarray, p1: np.n
         beta = load_beta(result_dir, voxel_ids, args.anatomical)
         with np.errstate(over="ignore", invalid="ignore"):
             exponentiated = np.exp(beta)
+        # OR coefficients need the baseline-risk correction before comparison
+        # with the directly modelled RR coefficients.
         if method.startswith("or-"):
             values[method] = odds_ratio_to_relative_risk(exponentiated, p1)
         else:
@@ -169,6 +179,7 @@ def load_method_values(args: argparse.Namespace, voxel_ids: np.ndarray, p1: np.n
 
 
 def density_counts(x: np.ndarray, y: np.ndarray, radius: float) -> np.ndarray:
+    """Count neighboring scatter points within a plotting-radius ball."""
     points = np.column_stack((x, y))
     tree = cKDTree(points)
     return np.asarray(tree.query_ball_point(points, r=radius, return_length=True), dtype=float)
@@ -183,6 +194,7 @@ def plot_panel(
     panel_index: int,
     args: argparse.Namespace,
 ) -> tuple[plt.Collection, int]:
+    """Plot one method comparison and return its scatter and point count."""
     finite = np.isfinite(x) & np.isfinite(y)
     x = x[finite]
     y = y[finite]
@@ -249,6 +261,7 @@ def plot_comparison(
     n_subjects: int,
     n_voxels: int,
 ) -> None:
+    """Render the three pairwise method comparisons for Figure 7."""
     rr_gee = values["rr-gee"][common_mask]
     rr_pgee = values["rr-pgee"][common_mask]
     rr_or_pgee = values["or-pgee"][common_mask]
@@ -315,6 +328,7 @@ def plot_comparison(
 
 
 def main() -> None:
+    """Load comparable fitted values and write Figure 7."""
     args = parse_args()
     validate_args(args)
     voxel_ids = load_voxel_ids(args.voxel_ids, max_voxels=args.max_voxels)

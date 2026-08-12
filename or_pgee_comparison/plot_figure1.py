@@ -32,6 +32,8 @@ LEGEND_FONTSIZE = 13
 
 @dataclass(frozen=True)
 class PairConfig:
+    """Labels and method identifiers for one GEE/PGEE comparison pair."""
+
     gee_method: str
     pgee_method: str
     gee_label: str
@@ -62,6 +64,8 @@ PAIR_CONFIGS = {
 
 @dataclass(frozen=True)
 class MetricConfig:
+    """Plot metadata for one paired diagnostic metric."""
+
     column_suffix: str
     label: str
     stem_suffix: str
@@ -293,6 +297,7 @@ def save_scatter(
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse Figure 1 plotting options."""
     parser = argparse.ArgumentParser(
         description="Generate paired GEE vs PGEE diagnostic scatter plots.",
     )
@@ -332,6 +337,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Generate the requested paired diagnostic scatter plots."""
     args = parse_args()
     figure_data = figure1_data(
         args.replications,

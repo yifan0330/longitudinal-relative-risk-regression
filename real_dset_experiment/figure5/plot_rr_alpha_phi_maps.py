@@ -38,6 +38,7 @@ DEFAULT_CHUNK_SIZE = 512
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse model, map, and output options for Figure 5."""
     parser = argparse.ArgumentParser(
         description="Plot voxel-wise GEE exchangeable alpha and dispersion phi maps."
     )
@@ -87,6 +88,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    """Validate Figure 5 paths, scales, and worker settings."""
     for label, path in (
         ("UKB input directory", args.ukb_dir),
         ("anatomical image", args.anatomical),
@@ -106,6 +108,7 @@ def validate_args(args: argparse.Namespace) -> None:
 
 
 def load_beta_matrix(result_dir: Path, anatomical: nib.Nifti1Image, voxel_ids: np.ndarray) -> np.ndarray:
+    """Load aligned coefficient maps at the analysis-mask voxels."""
     beta = np.full((voxel_ids.size, len(COEFFICIENT_NAMES)), np.nan, dtype=float)
     for index, coefficient_name in enumerate(COEFFICIENT_NAMES):
         path = result_dir / f"estimate_{coefficient_name}_GEE.nii.gz"
@@ -120,6 +123,7 @@ def load_beta_matrix(result_dir: Path, anatomical: nib.Nifti1Image, voxel_ids: n
 
 
 def load_convergence_mask(result_dir: Path, n_voxels: int) -> np.ndarray:
+    """Return the converged, non-failed voxel mask from fit metadata."""
     path = result_dir / "fit_summary.npz"
     if not path.is_file():
         return np.ones(n_voxels, dtype=bool)
@@ -139,6 +143,7 @@ def estimate_alpha_phi(
     model: str,
     chunk_size: int,
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Estimate exchangeable correlation alpha and dispersion phi by voxel."""
     n_voxels = beta.shape[0]
     n_obs = design.n_subjects * 2
     df = max(n_obs - design.n_coefficients, 1)
@@ -181,6 +186,7 @@ def estimate_alpha_phi(
 
 
 def values_to_map(values: np.ndarray, voxel_ids: np.ndarray, shape: tuple[int, int, int]) -> np.ndarray:
+    """Place mask values into a 3D map using the UKB voxel convention."""
     data = np.full(shape, np.nan, dtype=float)
     coordinates = np.unravel_index(voxel_ids - 1, shape, order="F")
     data[coordinates] = values
@@ -188,12 +194,14 @@ def values_to_map(values: np.ndarray, voxel_ids: np.ndarray, shape: tuple[int, i
 
 
 def write_nifti(values: np.ndarray, voxel_ids: np.ndarray, template: nib.Nifti1Image, output: Path) -> None:
+    """Write mask values as a NIfTI image aligned to a template."""
     data = values_to_map(values, voxel_ids, template.shape).astype(np.float32)
     output.parent.mkdir(parents=True, exist_ok=True)
     nib.save(nib.Nifti1Image(data, template.affine, template.header), str(output))
 
 
 def brain_crop(anatomical: np.ndarray, slices: tuple[int, ...]) -> tuple[tuple[int, int], tuple[int, int]]:
+    """Return common plot limits covering the requested anatomical slices."""
     masks = []
     for slice_index in slices:
         masks.append(anatomical[:, :, slice_index].T > 0)
@@ -209,7 +217,9 @@ def brain_crop(anatomical: np.ndarray, slices: tuple[int, ...]) -> tuple[tuple[i
 
 
 def paired_output_paths(output: Path, pdf_output: Path | None) -> tuple[Path, Path, Path, Path]:
+    """Return paired PNG and PDF paths for alpha and phi maps."""
     def phi_path(path: Path) -> Path:
+        """Derive the matching phi filename from an alpha filename."""
         if "alpha_map" in path.stem:
             return path.with_name(path.stem.replace("alpha_map", "phi_map") + path.suffix)
         if "alpha_phi_maps" in path.stem:
@@ -224,6 +234,7 @@ def paired_output_paths(output: Path, pdf_output: Path | None) -> tuple[Path, Pa
 
 
 def stratified_scale(boundaries: tuple[float, ...]):
+    """Create the discrete color scale used for an alpha or phi map."""
     cmap = plt.get_cmap("RdBu_r", len(boundaries) - 1).copy()
     cmap.set_bad((0, 0, 0, 0))
     norm = BoundaryNorm(boundaries, cmap.N, clip=True)
@@ -241,6 +252,7 @@ def plot_single_map(
     output: Path,
     pdf_output: Path,
 ) -> None:
+    """Render one parameter map across the requested axial slices."""
     anatomical = np.asarray(anatomical_img.get_fdata(), dtype=float)
     slices = tuple(int(index) for index in args.slices)
     if any(index < 0 or index >= anatomical.shape[2] for index in slices):
@@ -331,6 +343,7 @@ def plot_single_map(
 
 
 def main() -> None:
+    """Estimate or load model diagnostics and write Figure 5 maps."""
     args = parse_args()
     validate_args(args)
     args.result_dir = ensure_model_outputs(

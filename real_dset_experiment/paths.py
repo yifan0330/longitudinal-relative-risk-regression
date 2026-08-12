@@ -17,6 +17,7 @@ class ExperimentPaths:
 
     @classmethod
     def from_package_dir(cls, package_dir: Path) -> "ExperimentPaths":
+        """Build paths relative to the package while preserving project layout."""
         package_dir = package_dir.resolve()
         workspace_root = package_dir.parents[1]
         ukb_dir = package_dir / "UKB"
