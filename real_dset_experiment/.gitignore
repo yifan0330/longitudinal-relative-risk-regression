@@ -1,0 +1,6 @@
+/UKB/
+*.npz
+*.npy
+*.pkl
+*.nii
+*.nii.gz

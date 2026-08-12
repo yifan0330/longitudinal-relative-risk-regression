@@ -1,0 +1,6 @@
+task,scenario,replications,workers,elapsed_seconds,rows,validated_for_manuscript,speedup_vs_baseline
+serial_irls,base,12,1,20.593140872078948,48,True,1.0
+parallel_irls,base,12,4,15.623046585009433,48,True,1.3181258060024221
+exploratory_parallel_lbfgs_or_gee,base,12,4,15.090458150953054,48,False,1.3646464982097555
+loop_data_generation_only,base,12,1,0.2505044110585004,12,False,1.0
+exploratory_broadcast_data_generation_only,base,12,1,0.0025940340710803866,2400,False,96.56943748397572
