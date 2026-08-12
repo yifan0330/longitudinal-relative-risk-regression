@@ -1,4 +1,6 @@
-# GEE for Relative Risk Regression
+# Longitudinal relative risk regression
+
+**Full project name:** Longitudinal relative risk regression
 
 This repository contains code and generated simulation results for longitudinal relative-risk regression analyses using GEE and penalized GEE estimators.
 
