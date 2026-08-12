@@ -5,9 +5,10 @@ the historical input, cache, and output locations stable while exposing one
 workflow entry point:
 
 ```bash
-python -m UKB_validation figures
-python -m UKB_validation tables
-python -m UKB_validation all
+uv sync --locked
+uv run python -m UKB_validation figures
+uv run python -m UKB_validation tables
+uv run python -m UKB_validation all
 ```
 
 The default workflow reuses cached model maps. Add `--rerun-models` to refit

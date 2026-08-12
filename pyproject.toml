@@ -1,7 +1,7 @@
 [project]
-name = "longitudinal"
+name = "gee-for-relative-risk"
 version = "0.1.0"
-description = "Research code for longitudinal lesion modelling in neuroimaging data."
+description = "Reproducible RR-GEE, RR-PGEE, OR-GEE, and UK Biobank analyses."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

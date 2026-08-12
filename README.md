@@ -2,6 +2,24 @@
 
 This repository contains code and generated simulation results for longitudinal relative-risk regression analyses using GEE and penalized GEE estimators.
 
+## Environment setup
+
+Install [uv](https://docs.astral.sh/uv/) and create the locked Python
+environment from the repository root:
+
+```bash
+uv sync --locked
+```
+
+The project requires Python 3.11 or newer. Run analysis commands through the
+same environment with `uv run`; uv will use the versions recorded in
+`uv.lock`:
+
+```bash
+uv run python -m RR_OR_GEE_PGEE --help
+uv run python -m UKB_validation --help
+```
+
 ## Repository Structure
 
 - `RR_OR_GEE_PGEE/`: simulation code, post-processing scripts, manuscript table generators, and generated simulation results comparing RR-GEE, RR-PGEE, OR-GEE, and OR-PGEE estimators.
