@@ -4,28 +4,28 @@ This repository contains code and generated simulation results for longitudinal 
 
 ## Repository Structure
 
-- `or_pgee_comparison/`: simulation code, post-processing scripts, manuscript table generators, and generated simulation results comparing RR-GEE, RR-PGEE, OR-GEE, and OR-PGEE estimators.
-- `or_pgee_comparison/results/`: generated simulation summaries, LaTeX tables, diagnostic CSV files, and figures.
-- `real_dset_experiment/`: UK Biobank real-data analysis scripts for tables and figures.
+- `RR_OR_GEE_PGEE/`: simulation code, post-processing scripts, manuscript table generators, and generated simulation results comparing RR-GEE, RR-PGEE, OR-GEE, and OR-PGEE estimators.
+- `RR_OR_GEE_PGEE/results/`: generated simulation summaries, LaTeX tables, diagnostic CSV files, and figures.
+- `UKB_validation/`: UK Biobank real-data analysis scripts for tables and figures.
 
-The real-data input directory `real_dset_experiment/UKB/` is intentionally excluded from Git because it contains large and sensitive analysis inputs and model outputs.
+The real-data input directory `UKB_validation/UKB/` is intentionally excluded from Git because it contains large and sensitive analysis inputs and model outputs.
 
 ## Main Analyses
 
 ### Simulation Study
 
-The simulation study is implemented under `or_pgee_comparison/`. Key scripts include:
+The simulation study is implemented under `RR_OR_GEE_PGEE/`. Key scripts include:
 
 - `run_simulation.py`: runs simulation replications.
 - `postprocess.py`: builds summary tables from replication-level outputs.
 - `plot_figureB1.py`: plots the BEC threshold histogram for the simulation study.
 - `plot_figure1.py` and `plot_pp.py`: generate simulation diagnostic and probability-probability plots.
 
-Generated outputs are stored under `or_pgee_comparison/results/`.
+Generated outputs are stored under `RR_OR_GEE_PGEE/results/`.
 
 ### Real-Data UKB Analysis
 
-The real-data analysis scripts are under `real_dset_experiment/`. Key outputs include:
+The real-data analysis scripts are under `UKB_validation/`. Key outputs include:
 
 - `figure3/`: empirical lesion incidence maps.
 - `figure4/`: voxel-wise significance maps.
@@ -37,15 +37,15 @@ The real-data analysis scripts are under `real_dset_experiment/`. Key outputs in
 
 ## Data Policy
 
-Large UKB input files, intermediate model outputs, and binary neuroimaging/data files are not tracked in this repository. The ignore rules protect files such as `real_dset_experiment/UKB/`, `*.npz`, `*.npy`, `*.pkl`, and NIfTI files.
+Large UKB input files, intermediate model outputs, and binary neuroimaging/data files are not tracked in this repository. The ignore rules protect files such as `UKB_validation/UKB/`, `*.npz`, `*.npy`, `*.pkl`, and NIfTI files.
 
 ## Reproducibility Notes
 
 Most scripts are intended to be run from the repository root. For example:
 
 ```bash
-python -m or_pgee_comparison.plot_figureB1
-python real_dset_experiment/figureB3/plot_figureB3.py
+python -m RR_OR_GEE_PGEE.plot_figureB1
+python UKB_validation/figureB3/plot_figureB3.py
 ```
 
 This creates a local `.venv` from `pyproject.toml` with the Python packages needed by the analysis scripts. Run commands through that environment, for example:
@@ -266,5 +266,5 @@ The Funpack extraction scripts in `funpack/` are shell scripts intended for the 
 - If local imports fail, run from the repository root or from the script's directory so neighbouring modules are on `sys.path`.
 - If cluster jobs fail immediately, create the referenced output directories first, for example `GEE_tests/output`, `Simulations/code/Mar23_output`, or the relevant `temp_*` directory.
 
-Generated simulation results are tracked under `or_pgee_comparison/results/`; real-data
+Generated simulation results are tracked under `RR_OR_GEE_PGEE/results/`; real-data
 inputs are not included and must be available locally to rerun the UKB analyses.

@@ -27,8 +27,8 @@ __pycache__/
 output/
 results*/
 *results*/
-!or_pgee_comparison/results/
-!or_pgee_comparison/results/**
+!RR_OR_GEE_PGEE/results/
+!RR_OR_GEE_PGEE/results/**
 temp/
 temp*/
 **/temp*/

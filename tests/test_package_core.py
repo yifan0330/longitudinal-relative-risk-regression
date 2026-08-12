@@ -15,26 +15,26 @@ import nibabel as nib
 import numpy as np
 import pandas as pd
 
-from or_pgee_comparison.config import (
+from RR_OR_GEE_PGEE.config import (
     BASE_SCENARIO,
     full_scenarios,
     rep_seed,
     smoke_scenarios,
 )
-from or_pgee_comparison.coverage import add_interval_columns, summarize_coverage
-from or_pgee_comparison.data_generation import model_matrix
-from or_pgee_comparison.methods import (
+from RR_OR_GEE_PGEE.coverage import add_interval_columns, summarize_coverage
+from RR_OR_GEE_PGEE.data_generation import model_matrix
+from RR_OR_GEE_PGEE.methods import (
     METHOD_OR_GEE,
     METHOD_RR_GEE,
     zhang_yu_rr,
 )
-from real_dset_experiment.cli import FIGURE_COMMANDS, TABLE_COMMANDS
-from real_dset_experiment.figure3.plot_ukb_empirical_maps import (
+from UKB_validation.cli import FIGURE_COMMANDS, TABLE_COMMANDS
+from UKB_validation.figure3.plot_ukb_empirical_maps import (
     reconstruct_maps,
     slice_indices_to_cut_coords,
 )
-from real_dset_experiment.paths import ExperimentPaths
-from real_dset_experiment.ukb_python_experiment import (
+from UKB_validation.paths import ExperimentPaths
+from UKB_validation.ukb_python_experiment import (
     UKBDesign,
     _initial_beta,
     _objective_and_gradient,
@@ -147,10 +147,10 @@ class RealDataHelperTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 model_result_dir(root, "unknown")
 
-            paths = ExperimentPaths.from_package_dir(root / "real_dset_experiment")
+            paths = ExperimentPaths.from_package_dir(root / "UKB_validation")
             self.assertEqual(
                 paths.model_result_dir("or-pgee"),
-                root / "real_dset_experiment" / "UKB" / "python_results" / "or_pgee",
+                root / "UKB_validation" / "UKB" / "python_results" / "or_pgee",
             )
 
     def test_voxel_ids_are_positive_unique_and_one_based(self) -> None:
@@ -209,7 +209,7 @@ class CommandInventoryTests(unittest.TestCase):
         commands = FIGURE_COMMANDS + TABLE_COMMANDS
         self.assertTrue(commands)
         self.assertTrue(
-            all(command.module.startswith("real_dset_experiment.") for command in commands)
+            all(command.module.startswith("UKB_validation.") for command in commands)
         )
         nested_modules = {
             "figure3",
