@@ -7,6 +7,7 @@ the package's simulation and real-data workflows.
 
 from __future__ import annotations
 
+import pickle
 import tempfile
 import unittest
 from pathlib import Path
@@ -21,18 +22,36 @@ from RR_OR_GEE_PGEE.config import (
     rep_seed,
     smoke_scenarios,
 )
-from RR_OR_GEE_PGEE.coverage import add_interval_columns, summarize_coverage
+from RR_OR_GEE_PGEE.coverage import (
+    add_interval_columns,
+    coverage_from_saved_payload,
+    summarize_coverage,
+)
 from RR_OR_GEE_PGEE.data_generation import model_matrix
 from RR_OR_GEE_PGEE.methods import (
     METHOD_OR_GEE,
     METHOD_RR_GEE,
+    _logistic_negative_log_likelihood,
+    _logistic_negative_log_likelihood_gradient,
+    estimate_p0_observed,
     zhang_yu_rr,
 )
-from UKB_validation.cli import FIGURE_COMMANDS, TABLE_COMMANDS
+from UKB_validation.cli import (
+    FIGURE_COMMANDS,
+    TABLE_COMMANDS,
+    ModuleCommand,
+    _commands_with_cache_policy,
+    _fit_arguments,
+    build_parser,
+)
 from UKB_validation.io import values_at_voxels
 from UKB_validation.figure3.plot_ukb_empirical_maps import (
     reconstruct_maps,
     slice_indices_to_cut_coords,
+)
+from UKB_validation.figure6.plot_rr_pgee_relative_risk_maps import (
+    load_empirical_maps,
+    load_relative_risk_map,
 )
 from UKB_validation.paths import ExperimentPaths
 from UKB_validation.mapping import values_to_map
@@ -136,6 +155,63 @@ class SimulationSummaryTests(unittest.TestCase):
         summary = summarize_coverage(result)
         self.assertEqual(summary["coverage_n"].tolist(), [1, 1])
 
+    def test_empty_coverage_summary_preserves_output_columns(self) -> None:
+        rows = pd.DataFrame(
+            {
+                "scenario": ["toy"],
+                "method": [METHOD_RR_GEE],
+                "covered": [False],
+                "coverage_eligible": [False],
+                "true_rr": [2.0],
+            }
+        )
+        result = summarize_coverage(rows)
+        self.assertEqual(
+            result.columns.tolist(),
+            ["scenario", "method", "coverage", "coverage_n", "true_rr"],
+        )
+        self.assertTrue(result.empty)
+
+    def test_observed_baseline_risk_returns_unexposed_mean_or_nan(self) -> None:
+        data = pd.DataFrame({"X1i": [0, 0, 1], "yij": [0, 1, 1]})
+        self.assertAlmostEqual(estimate_p0_observed(data), 0.5)
+        exposed_only = pd.DataFrame({"X1i": [1, 1], "yij": [0, 1]})
+        self.assertTrue(np.isnan(estimate_p0_observed(exposed_only)))
+
+    def test_logistic_objective_gradient_matches_centered_residuals(self) -> None:
+        X = np.column_stack([np.ones(3), [0.0, 1.0, 2.0]])
+        y = np.array([0.0, 1.0, 1.0])
+        beta = np.zeros(2)
+        self.assertAlmostEqual(_logistic_negative_log_likelihood(beta, X, y), 3 * np.log(2.0))
+        np.testing.assert_allclose(
+            _logistic_negative_log_likelihood_gradient(beta, X, y),
+            [-0.5, -1.5],
+        )
+
+    def test_coverage_payload_conversion_uses_second_coefficient(self) -> None:
+        payload = {
+            "beta": np.array([[0.0, np.log(2.0)], [0.0, np.nan]]),
+            "se": np.array([[0.1, 0.2], [0.1, 0.2]]),
+            "conv": np.array([True, True]),
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "toy_payload.pkl"
+            with path.open("wb") as file_handle:
+                pickle.dump(payload, file_handle)
+            result = coverage_from_saved_payload(
+                path,
+                np.log(2.0),
+                method_key=METHOD_RR_GEE,
+                coefficient_key="beta",
+                se_key="se",
+                convergence_key="conv",
+            )
+        self.assertEqual(result["scenario"].tolist(), ["toy_payload", "toy_payload"])
+        np.testing.assert_allclose(result.loc[0, "rr_estimate"], 2.0)
+        self.assertTrue(result.loc[0, "finite"])
+        self.assertFalse(result.loc[1, "finite"])
+        self.assertTrue(result.loc[0, "covered"])
+
 
 class RealDataHelperTests(unittest.TestCase):
     """Test model classification, paths, voxel ordering, and optimizer helpers."""
@@ -204,6 +280,55 @@ class RealDataHelperTests(unittest.TestCase):
         image = values_to_map(values, voxel_ids, (2, 2, 2))
         np.testing.assert_allclose(values_at_voxels(image, voxel_ids), values)
 
+    def test_figure6_relative_risk_map_exponentiates_coefficients(self) -> None:
+        affine = np.eye(4)
+        anatomical = nib.Nifti1Image(np.zeros((2, 2, 1)), affine)
+        beta_map = values_to_map(np.log([2.0, 0.5]), np.array([1, 4]), anatomical.shape)
+        with tempfile.TemporaryDirectory() as directory:
+            result_dir = Path(directory)
+            nib.save(
+                nib.Nifti1Image(beta_map, affine),
+                result_dir / "estimate_baseAge_GEE.nii.gz",
+            )
+            result = load_relative_risk_map(
+                result_dir,
+                "baseAge",
+                anatomical,
+                np.array([1, 4]),
+            )
+        self.assertAlmostEqual(result[0, 0, 0], 2.0)
+        self.assertAlmostEqual(result[1, 1, 0], 0.5)
+        self.assertTrue(np.isnan(result[1, 0, 0]))
+
+    def test_figure6_relative_risk_map_rejects_misaligned_coefficients(self) -> None:
+        anatomical = nib.Nifti1Image(np.zeros((2, 2, 1)), np.eye(4))
+        with tempfile.TemporaryDirectory() as directory:
+            result_dir = Path(directory)
+            nib.save(
+                nib.Nifti1Image(np.zeros((2, 2, 1)), np.diag([2.0, 1.0, 1.0, 1.0])),
+                result_dir / "estimate_baseAge_GEE.nii.gz",
+            )
+            with self.assertRaises(ValueError):
+                load_relative_risk_map(result_dir, "baseAge", anatomical, np.array([1]))
+
+    def test_figure6_empirical_maps_preserve_nan_for_zero_baseline_risk(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            ukb_dir = Path(directory)
+            np.savez(
+                ukb_dir / "lesions_atleast6_CVR.npz",
+                lesions_vis1=np.array([[0, 0], [1, 1]], dtype=float),
+                lesions_vis2=np.array([[1, 0], [1, 0]], dtype=float),
+            )
+            sqrt_p1, empirical_rr = load_empirical_maps(
+                ukb_dir,
+                np.array([1, 4]),
+                (2, 2, 1),
+            )
+        self.assertAlmostEqual(sqrt_p1[0, 0, 0], 0.0)
+        self.assertTrue(np.isnan(empirical_rr[0, 0, 0]))
+        self.assertAlmostEqual(sqrt_p1[1, 1, 0], 1.0)
+        self.assertAlmostEqual(empirical_rr[1, 1, 0], 0.5)
+
     def test_shared_statistics_match_expected_adjustments(self) -> None:
         np.testing.assert_allclose(
             benjamini_hochberg(np.array([0.01, 0.04, 0.2])),
@@ -244,6 +369,26 @@ class CommandInventoryTests(unittest.TestCase):
         self.assertFalse(
             any(command.module.split(".")[1] in nested_modules for command in commands)
         )
+
+    def test_fit_arguments_validate_worker_count_and_cache_policy(self) -> None:
+        parser = build_parser()
+        cached_args = parser.parse_args(["fit"])
+        self.assertEqual(_fit_arguments(cached_args), ("--models", "all", "--use-cache"))
+        rerun_args = parser.parse_args(["fit", "--rerun-models", "--n-jobs", "2"])
+        self.assertEqual(_fit_arguments(rerun_args), ("--models", "all", "--n-jobs", "2"))
+        invalid_args = parser.parse_args(["fit", "--n-jobs", "0"])
+        with self.assertRaises(ValueError):
+            _fit_arguments(invalid_args)
+
+    def test_rerun_policy_removes_use_cache_from_commands(self) -> None:
+        commands = (
+            ModuleCommand("package.cached", ("--use-cache", "--flag")),
+            ModuleCommand("package.plain", ("--flag",)),
+        )
+        self.assertEqual(_commands_with_cache_policy(commands, rerun_models=False), commands)
+        rerun_commands = _commands_with_cache_policy(commands, rerun_models=True)
+        self.assertEqual(rerun_commands[0].arguments, ("--flag",))
+        self.assertEqual(rerun_commands[1].arguments, ("--flag",))
 
 
 if __name__ == "__main__":

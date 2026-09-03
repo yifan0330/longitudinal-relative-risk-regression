@@ -21,10 +21,6 @@ for path in (SIM_CODE_DIR, PGEE_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from gee_logPoisson_dispersion_fn import gee_dispersion_run  # noqa: E402
-from Mar23_PGEE_source import geefirth  # noqa: E402
-from Sept21_pgee_logPoisson_dispersion_fn import gee_penalty_run  # noqa: E402
-
 
 METHOD_RR_GEE = "RR-GEE"
 METHOD_RR_PGEE = "RR-PGEE"
@@ -66,6 +62,7 @@ def fit_all_methods(
     """Fit RR-GEE, RR-PGEE, OR-GEE, and OR-PGEE to the same dataset."""
     if fit_engine not in FIT_ENGINES:
         raise ValueError(f"Unknown fit engine: {fit_engine}")
+    gee_dispersion_run, gee_penalty_run, _ = _load_legacy_fitters()
     or_gee_record = (
         fit_or_lbfgs_method(METHOD_OR_GEE, data, scenario, max_iter=max_iter)
         if fit_engine == FIT_ENGINE_LBFGS_OR_GEE
@@ -144,6 +141,7 @@ def fit_or_method(
     ids = data["id"].to_numpy(int)
     x_without_intercept = X[:, 1:3]
     try:
+        _, _, geefirth = _load_legacy_fitters()
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=RuntimeWarning)
             fit = geefirth(
@@ -243,6 +241,15 @@ def estimate_p0_observed(data: pd.DataFrame) -> float:
     if unexposed.empty:
         return np.nan
     return float(unexposed.mean())
+
+
+def _load_legacy_fitters() -> tuple[Any, Any, Any]:
+    """Import historical fitting routines only when a real fit is requested."""
+    from gee_logPoisson_dispersion_fn import gee_dispersion_run
+    from Mar23_PGEE_source import geefirth
+    from Sept21_pgee_logPoisson_dispersion_fn import gee_penalty_run
+
+    return gee_dispersion_run, gee_penalty_run, geefirth
 
 
 def _logistic_negative_log_likelihood(beta: np.ndarray, X: np.ndarray, y: np.ndarray) -> float:
