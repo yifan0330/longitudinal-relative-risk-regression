@@ -1,0 +1,3 @@
+method,n_voxels,finite_all_coefficients,shown_in_histogram,bec_gt_10_any_coefficient,missing_any_coefficient,sex_bec_gt_10,sex_bec_median,sex_bec_max
+OR-GEE,19801,19801,19315,486,0,375,1.5247381194365008,5386.022631283088
+OR-PGEE,19801,19801,19722,79,0,16,1.2113599367747738,32.191032186357404

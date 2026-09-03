@@ -31,6 +31,7 @@ applicable) CSV/LaTeX tables.
 | Table 5 | `table5.calculate_ukb_characteristics` | [table5](table5/) |
 | Table 6 | `table6.calculate_significant_coefficients`, `calculate_or_significant_coefficients` | [table6](table6/) |
 | Table 7 | `table7.calculate_rr_relative_risk_by_incidence` | [table7](table7/) |
+| Table 8 | computational-time summary and implementation text | [table8](table8/) |
 
 The generated files are intentionally kept next to their generating modules so
 that a GitHub reader can inspect every original figure and table without
@@ -50,6 +51,8 @@ data and cached model results; it is not recreated by the plotting commands.
   recommended figure entry points.
 * `table_5.py`, `table6_rr.py`, `table6_or.py`, and `table_7.py` are the
   recommended table entry points.
+* `table8/` contains the computational-time summary table and corresponding
+  implementation-details paragraph derived from the UKB rerun logs.
 * The historical `figure*/` and `table*/` modules remain available as
   compatibility entry points and retain their original output directories.
 * `cli.py` and `__main__.py` provide the reproducible command-line workflow.

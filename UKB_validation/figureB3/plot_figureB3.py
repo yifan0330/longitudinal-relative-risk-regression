@@ -15,6 +15,7 @@ from matplotlib.patches import Rectangle
 import nibabel as nib
 import numpy as np
 import pandas as pd
+from scipy.special import expit
 
 
 HERE = Path(__file__).resolve().parent
@@ -27,8 +28,13 @@ DEFAULT_RESULTS_ROOT = DEFAULT_PYTHON_RESULTS_DIR
 DEFAULT_OUTPUT = HERE / "figureB3_ukb_bec_threshold.png"
 DEFAULT_CACHE = HERE / "figureB3_bec_values.npz"
 DEFAULT_SUMMARY = HERE / "figureB3_ukb_bec_threshold_summary.csv"
-METHODS = ("rr_gee", "rr_pgee")
-METHOD_LABELS = {"rr_gee": "RR-GEE", "rr_pgee": "RR-PGEE"}
+DEFAULT_METHODS = ("rr_gee", "rr_pgee")
+METHOD_LABELS = {
+    "rr_gee": "RR-GEE",
+    "rr_pgee": "RR-PGEE",
+    "or_gee": "OR-GEE",
+    "or_pgee": "OR-PGEE",
+}
 SEX_COEFFICIENT = "sexM"
 CHUNK_SIZE = 512
 
@@ -48,6 +54,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
     parser.add_argument("--summary", type=Path, default=DEFAULT_SUMMARY)
+    parser.add_argument(
+        "--methods",
+        nargs=2,
+        choices=tuple(METHOD_LABELS),
+        default=DEFAULT_METHODS,
+        help="Two fitted methods to compare in the histogram panels.",
+    )
     parser.add_argument("--x-max", type=float, default=10.0)
     parser.add_argument("--threshold", type=float, default=10.0)
     parser.add_argument("--bin-width", type=float, default=0.4)
@@ -59,8 +72,15 @@ def validate_args(args: argparse.Namespace) -> None:
     """Validate BEC input paths and positive plotting parameters."""
     if not args.results_root.exists():
         raise FileNotFoundError(f"Results root not found: {args.results_root}")
+    if len(set(args.methods)) != len(args.methods):
+        raise ValueError("--methods must name two distinct fitted methods")
     if args.x_max <= 0 or args.threshold <= 0 or args.bin_width <= 0 or args.dpi <= 0:
         raise ValueError("--x-max, --threshold, --bin-width, and --dpi must be positive")
+
+
+def method_is_poisson(method: str) -> bool:
+    """Return whether a method uses the log-link Poisson formulation."""
+    return method.startswith("rr_")
 
 
 def load_nifti_values(path: Path, voxel_ids: np.ndarray) -> np.ndarray:
@@ -103,6 +123,7 @@ def model_se_from_information(
     beta: np.ndarray,
     alpha: np.ndarray,
     phi: np.ndarray,
+    poisson: bool,
 ) -> np.ndarray:
     """Calculate model-based standard errors from fitted information matrices."""
     n_voxels, n_coefficients = beta.shape
@@ -120,7 +141,12 @@ def model_se_from_information(
     n_subjects, n_visits, _ = x_clusters.shape
     x = x_clusters.reshape(n_subjects * n_visits, n_coefficients)
     eta = np.clip(x @ beta_finite.T, -30.0, 30.0)
-    mu = np.exp(eta).T.reshape(beta_finite.shape[0], n_subjects, n_visits)
+    if poisson:
+        mu = np.exp(eta).T.reshape(beta_finite.shape[0], n_subjects, n_visits)
+        variance = np.clip(mu, 1e-12, None)
+    else:
+        mu = expit(eta).T.reshape(beta_finite.shape[0], n_subjects, n_visits)
+        variance = np.clip(mu * (1.0 - mu), 1e-12, None)
 
     determinant = 1.0 - alpha_finite**2
     r00 = 1.0 / determinant
@@ -128,10 +154,10 @@ def model_se_from_information(
     r11 = r00
     information = np.zeros((beta_finite.shape[0], n_coefficients, n_coefficients), dtype=float)
     for subject_index in range(n_subjects):
-        subject_mu = mu[:, subject_index, :]
-        a00 = phi_finite * subject_mu[:, 0] * r00
-        a01 = phi_finite * np.sqrt(subject_mu[:, 0] * subject_mu[:, 1]) * r01
-        a11 = phi_finite * subject_mu[:, 1] * r11
+        subject_variance = variance[:, subject_index, :]
+        a00 = phi_finite * subject_variance[:, 0] * r00
+        a01 = phi_finite * np.sqrt(subject_variance[:, 0] * subject_variance[:, 1]) * r01
+        a11 = phi_finite * subject_variance[:, 1] * r11
         x0 = x_clusters[subject_index, 0]
         x1 = x_clusters[subject_index, 1]
         information += a00[:, None, None] * np.outer(x0, x0)
@@ -147,7 +173,11 @@ def model_se_from_information(
     return output
 
 
-def first_iteration_model_se(x_clusters: np.ndarray, outcomes: np.ndarray) -> np.ndarray:
+def first_iteration_model_se(
+    x_clusters: np.ndarray,
+    outcomes: np.ndarray,
+    poisson: bool,
+) -> np.ndarray:
     """Calculate standard errors after the initial Poisson iteration."""
     n_subjects, n_visits, n_coefficients = x_clusters.shape
     n_voxels = outcomes.shape[1]
@@ -158,10 +188,19 @@ def first_iteration_model_se(x_clusters: np.ndarray, outcomes: np.ndarray) -> np
         stop = min(start + CHUNK_SIZE, n_voxels)
         y = outcomes[:, start:stop]
         beta = np.zeros((stop - start, n_coefficients), dtype=float)
-        beta[:, 0] = np.log(np.maximum(y.mean(axis=0), 1e-6))
+        mean_y = y.mean(axis=0)
+        if poisson:
+            beta[:, 0] = np.log(np.maximum(mean_y, 1e-6))
+        else:
+            beta[:, 0] = np.log(np.clip(mean_y, 1e-6, 1.0 - 1e-6) / np.clip(1.0 - mean_y, 1e-6, 1.0))
         eta = np.clip(x @ beta.T, -30.0, 30.0)
-        mu = np.exp(eta)
-        information = np.einsum("nv,ni,nj->vij", mu, x, x, optimize=True)
+        if poisson:
+            mu = np.exp(eta)
+            variance = np.clip(mu, 1e-12, None)
+        else:
+            mu = expit(eta)
+            variance = np.clip(mu * (1.0 - mu), 1e-12, None)
+        information = np.einsum("nv,ni,nj->vij", variance, x, x, optimize=True)
         scale = np.trace(information, axis1=1, axis2=2) / n_coefficients
         information += np.maximum(scale, 1.0)[:, None, None] * 1e-8 * np.eye(n_coefficients)
         score = x.T @ (y - mu)
@@ -173,16 +212,21 @@ def first_iteration_model_se(x_clusters: np.ndarray, outcomes: np.ndarray) -> np
         beta += np.clip(step, -2.0, 2.0)
 
         eta = np.clip(x @ beta.T, -30.0, 30.0)
-        mu = np.exp(eta).T.reshape(stop - start, n_subjects, n_visits)
+        if poisson:
+            mu = np.exp(eta).T.reshape(stop - start, n_subjects, n_visits)
+            variance = np.clip(mu, 1e-12, None)
+        else:
+            mu = expit(eta).T.reshape(stop - start, n_subjects, n_visits)
+            variance = np.clip(mu * (1.0 - mu), 1e-12, None)
         residual = (y.T.reshape(stop - start, n_subjects, n_visits) - mu) / np.sqrt(
-            np.clip(mu, 1e-12, None)
+            variance
         )
         phi = (n_subjects * n_visits - n_coefficients) / np.maximum(
             np.sum(residual**2, axis=(1, 2)),
             1e-12,
         )
         alpha = np.clip(phi * np.sum(residual[:, :, 0] * residual[:, :, 1], axis=1) / n_subjects, -0.95, 0.95)
-        output[start:stop] = model_se_from_information(x_clusters, beta, alpha, phi)
+        output[start:stop] = model_se_from_information(x_clusters, beta, alpha, phi, poisson)
 
     return output
 
@@ -194,10 +238,18 @@ def compute_bec_values(args: argparse.Namespace) -> dict[str, np.ndarray]:
         design.n_subjects * 2,
         design.n_voxels,
     )
-    initial_se = first_iteration_model_se(design.X_clusters, outcomes)
     bec_values: dict[str, np.ndarray] = {}
+    initial_se_by_link: dict[bool, np.ndarray] = {}
 
-    for method in METHODS:
+    for method in args.methods:
+        poisson = method_is_poisson(method)
+        if poisson not in initial_se_by_link:
+            initial_se_by_link[poisson] = first_iteration_model_se(
+                design.X_clusters,
+                outcomes,
+                poisson,
+            )
+        initial_se = initial_se_by_link[poisson]
         beta, alpha, phi = load_method_arrays(args.results_root, method, design.voxel_ids)
         final_se = np.full_like(initial_se, np.nan)
         for start in range(0, design.n_voxels, CHUNK_SIZE):
@@ -207,6 +259,7 @@ def compute_bec_values(args: argparse.Namespace) -> dict[str, np.ndarray]:
                 beta[start:stop],
                 alpha[start:stop],
                 phi[start:stop],
+                poisson,
             )
         with np.errstate(divide="ignore", invalid="ignore"):
             bec_values[method] = final_se / initial_se
@@ -215,7 +268,7 @@ def compute_bec_values(args: argparse.Namespace) -> dict[str, np.ndarray]:
     np.savez_compressed(
         args.cache,
         coefficient_names=np.asarray(COEFFICIENT_NAMES, dtype=str),
-        **{method: bec_values[method] for method in METHODS},
+        **{method: bec_values[method] for method in args.methods},
     )
     return bec_values
 
@@ -267,7 +320,7 @@ def plot_figure(bec_values: dict[str, np.ndarray], args: argparse.Namespace) -> 
     figure, axes = plt.subplots(1, 2, figsize=(7.2, 3.8), sharex=True, sharey=True)
     summary_rows: list[dict[str, object]] = []
 
-    for index, (axis, method) in enumerate(zip(axes, METHODS)):
+    for index, (axis, method) in enumerate(zip(axes, args.methods)):
         bec = bec_values[method]
         sex_bec = bec[:, sex_index]
         finite_all = np.all(np.isfinite(bec), axis=1)
@@ -296,7 +349,7 @@ def plot_figure(bec_values: dict[str, np.ndarray], args: argparse.Namespace) -> 
         for spine in axis.spines.values():
             spine.set_linewidth(0.8)
         if index == 0:
-            axis.set_ylabel("Frequency", fontsize=11)
+            axis.set_ylabel("Count", fontsize=11)
         else:
             axis.spines["left"].set_visible(False)
             axis.tick_params(axis="y", left=False, labelleft=False)

@@ -66,6 +66,16 @@ def median_range(series: pd.Series, decimals: int = 1, comma: bool = False) -> s
     )
 
 
+def median_integer_range(series: pd.Series) -> str:
+    """Format a one-decimal median with integer observed range."""
+    return f"{series.median():.1f} ({series.min():.0f}; {series.max():.0f})"
+
+
+def latex_integer(value: int) -> str:
+    """Format an integer with LaTeX-safe thousands separators."""
+    return f"{value:,}".replace(",", r"{,}")
+
+
 def build_table(frame: pd.DataFrame) -> str:
     """Build the LaTeX table using the layout of Table 7."""
     age = frame["age_vis2"].astype(float)
@@ -89,17 +99,17 @@ def build_table(frame: pd.DataFrame) -> str:
             mean_sd(time_between_visits),
             median_range(time_between_visits),
         ),
-        ("Sex (baseline female)", f"{percent_men:.1f}\\% Men", "--"),
+        ("Sex (baseline female)", f"{percent_men:.1f}\\% Men", "---"),
         ("Head size scaling*", mean_sd(head_size), median_range(head_size)),
-        ("CVR score, visit 1", mean_sd(cvr_visit_1), median_range(cvr_visit_1, 0)),
-        ("CVR score, visit 2", mean_sd(cvr_visit_2), median_range(cvr_visit_2, 0)),
+        ("CVR score, visit 1", mean_sd(cvr_visit_1), median_integer_range(cvr_visit_1)),
+        ("CVR score, visit 2", mean_sd(cvr_visit_2), median_integer_range(cvr_visit_2)),
         (
-            "Lesion volume, visit 1 ($\\mathrm{mm}^3$)",
+            "Lesion volume, visit 1 (mm$^3$)",
             mean_sd(lesion_visit_1, comma=True),
             median_range(lesion_visit_1, comma=True),
         ),
         (
-            "Lesion volume, visit 2 ($\\mathrm{mm}^3$)",
+            "Lesion volume, visit 2  (mm$^3$)",
             mean_sd(lesion_visit_2, comma=True),
             median_range(lesion_visit_2, comma=True),
         ),
@@ -109,29 +119,34 @@ def build_table(frame: pd.DataFrame) -> str:
     for index, row in enumerate(rows):
         if index in {4, 6}:
             table_rows.append(r"\hline")
-        table_rows.append(" & ".join(row) + r" \\")
+            table_rows.append(r"\hline")
+        table_rows.append("\t" + " & ".join(row) + r" \\")
+        if index == 5:
+            table_rows.append("\t" + r"%CVR score difference &  0.1 (0.7) & 0 (-2; 3)\\")
+        elif index == 7:
+            table_rows.append(
+                "\t"
+                + r"%Lesion volume difference & 424 (3,589) & 200 (-39,498; 31,301)\\"
+            )
 
     body = "\n".join(table_rows)
-    return f"""\\begin{{table}}[htbp]
+    return f"""\\begin{{table}}[ht]
 \\centering
-\\caption{{Characteristics of UK Biobank dataset of {len(frame):,} participants.}}
-\\label{{tab:ukb-characteristics}}
-\\setlength{{\\tabcolsep}}{{8pt}}
-\\renewcommand{{\\arraystretch}}{{1.15}}
-\\begin{{tabular}}{{lrr}}
+\\renewcommand{{\\arraystretch}}{{1.05}}
+\\caption{{Characteristics of the UK Biobank sample ($N = {latex_integer(len(frame))}$ participants).}}
+\begin{{tabular}}{{ |l||r|r|}}
 \\hline
-Characteristics & Mean (SD) & Median (range) \\\\
+	Characteristics & Mean (SD) & Median (range)\\\\
 \\hline
+\\hline
+	%
 {body}
 \\hline
 \\end{{tabular}}
-
-\\vspace{{0.4em}}
-\\begin{{minipage}}{{0.94\\linewidth}}
-\\footnotesize
-*Average of head size scaling for visits 1 and 2.\\\\
+\\\\[0.5em]
+*average of head size scaling for visits 1 and 2\\\\
 N: number of participants; SD: standard deviation; CVR: cerebrovascular risk.
-\\end{{minipage}}
+\\label{{tab:UKBdata}}
 \\end{{table}}
 """
 

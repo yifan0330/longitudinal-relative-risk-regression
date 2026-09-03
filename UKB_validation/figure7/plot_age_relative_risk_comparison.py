@@ -11,6 +11,8 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Normalize
 from matplotlib.patches import Rectangle
 from matplotlib.lines import Line2D
 import nibabel as nib
@@ -34,6 +36,7 @@ from UKB_validation.io import load_empirical_visits, load_voxel_ids as _load_vox
 DEFAULT_VOXEL_IDS = DEFAULT_UKB_DIR / "voxel_IDs_CVR.dat"
 DEFAULT_OUTPUT = SCRIPT_DIR / "figure7_age_relative_risk_comparison.png"
 METHODS = ("rr-gee", "rr-pgee", "or-pgee")
+SCATTER_ALPHA = 1.0
 
 
 def parse_args() -> argparse.Namespace:
@@ -57,7 +60,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-voxels", type=int, default=None)
     parser.add_argument("--axis-min", type=float, default=-0.1)
     parser.add_argument("--axis-max", type=float, default=2.1)
-    parser.add_argument("--colorbar-vmax", type=float, default=7000.0)
+    parser.add_argument("--colorbar-vmax", type=float, default=6000.0)
     parser.add_argument(
         "--neighbor-radius",
         type=float,
@@ -183,6 +186,7 @@ def plot_panel(
     ylabel: str | None,
     panel_index: int,
     args: argparse.Namespace,
+    color_norm: Normalize,
 ) -> tuple[plt.Collection, int]:
     """Plot one method comparison and return its scatter and point count."""
     finite = np.isfinite(x) & np.isfinite(y)
@@ -196,9 +200,8 @@ def plot_panel(
         c=np.clip(counts[order], 0, args.colorbar_vmax),
         s=7,
         cmap="viridis",
-        alpha=0.32,
-        vmin=0,
-        vmax=args.colorbar_vmax,
+        alpha=SCATTER_ALPHA,
+        norm=color_norm,
         linewidths=0,
         rasterized=True,
     )
@@ -265,6 +268,7 @@ def plot_comparison(
 
     scatters = []
     panel_counts = []
+    color_norm = Normalize(vmin=0, vmax=args.colorbar_vmax)
     for index, (axis, (x, y, title)) in enumerate(zip(axes, panels)):
         scatter, count = plot_panel(
             axis,
@@ -274,6 +278,7 @@ def plot_comparison(
             "Relative risks for Age (visit 1)" if index == 0 else None,
             index,
             args,
+            color_norm,
         )
         scatters.append(scatter)
         panel_counts.append(count)
@@ -298,10 +303,12 @@ def plot_comparison(
         labelspacing=0.2,
     )
     colorbar_axis = figure.add_axes((0.865, 0.34, 0.018, 0.29))
-    colorbar = figure.colorbar(scatters[-1], cax=colorbar_axis, ticks=(0, 2000, 4000, 6000))
-    colorbar.set_label("Neighbors", fontsize=9, labelpad=6)
+    colorbar_mappable = ScalarMappable(norm=color_norm, cmap="viridis")
+    colorbar_mappable.set_array([])
+    colorbar = figure.colorbar(colorbar_mappable, cax=colorbar_axis, ticks=(0, 2000, 4000, 6000))
+    colorbar.ax.set_title("n_neighbors", fontsize=9, pad=6)
     colorbar.ax.tick_params(labelsize=8, length=3, pad=2)
-    colorbar.outline.set_linewidth(0.6)
+    colorbar.outline.set_visible(False)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(args.output, dpi=args.dpi, facecolor="white")

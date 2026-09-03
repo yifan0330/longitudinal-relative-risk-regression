@@ -1,0 +1,17 @@
+\begin{table}[htbp]
+\centering
+\caption{Computational time for the UK Biobank voxel-wise model fits. Timings are wall-clock times from reruns using $8$ worker processes, BLAS threads capped at $1$ per worker, and $19{,}801$ analysis voxels from $1{,}578$ subjects observed at $2$ visits.}
+\label{tab:ukb-computational-time}
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{llrrr}
+\toprule
+Model & Optimisation & Workers & Wall-clock time & Finite predictor $z$-scores \\
+\midrule
+RR-GEE & Chunked vectorised IRLS/Newton & $8$ & $54.70$ s ($0.91$ min) & $158{,}408/158{,}408$ \\
+RR-PGEE & L-BFGS & $8$ & $1519.98$ s ($25.33$ min) & $158{,}408/158{,}408$ \\
+OR-GEE & L-BFGS & $8$ & $318.45$ s ($5.31$ min) & $158{,}378/158{,}408$ \\
+OR-PGEE & L-BFGS & $8$ & $1609.42$ s ($26.82$ min) & $158{,}408/158{,}408$ \\
+\bottomrule
+\end{tabular}
+\end{table}

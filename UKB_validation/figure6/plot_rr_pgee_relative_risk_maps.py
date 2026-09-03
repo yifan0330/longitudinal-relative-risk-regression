@@ -33,7 +33,7 @@ from UKB_validation.mapping import values_to_map as _values_to_map
 
 DEFAULT_VOXEL_IDS = DEFAULT_UKB_DIR / "voxel_IDs_CVR.dat"
 DEFAULT_SLICES = (40, 45, 50)
-FIGURE6_MODELS = ("rr-pgee", "or-gee", "or-pgee")
+FIGURE6_MODELS = ("rr-gee", "rr-pgee", "or-gee", "or-pgee")
 PREDICTORS = (
     ("c", "baseAge", "Age (visit 1)"),
     ("d", "ageDiff", "Time difference"),
@@ -87,6 +87,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sqrt-vmax", type=float, default=0.7)
     parser.add_argument("--rr-vmin", type=float, default=0.0)
     parser.add_argument("--rr-vmax", type=float, default=2.0)
+    parser.add_argument("--rr-narrow-vmin", type=float, default=0.5)
+    parser.add_argument("--rr-narrow-vmax", type=float, default=1.5)
     parser.add_argument("--overlay-alpha", type=float, default=1.0)
     parser.add_argument("--dpi", type=int, default=300)
     parser.add_argument("--n-jobs", type=int, default=default_n_jobs())
@@ -110,7 +112,12 @@ def validate_args(args: argparse.Namespace) -> None:
             raise FileNotFoundError(f"{label} not found: {path}")
     if not args.slices:
         raise ValueError("At least one axial slice is required")
-    if args.dpi <= 0 or args.sqrt_vmax <= 0 or args.rr_vmax <= args.rr_vmin:
+    if (
+        args.dpi <= 0
+        or args.sqrt_vmax <= 0
+        or args.rr_vmax <= args.rr_vmin
+        or args.rr_narrow_vmax <= args.rr_narrow_vmin
+    ):
         raise ValueError("--dpi and color-scale ranges must be positive")
     if not 0 < args.overlay_alpha <= 1:
         raise ValueError("--overlay-alpha must lie in (0, 1]")
@@ -234,7 +241,7 @@ def save_panel(
         spine.set_visible(False)
     background_axis.text(
         0.0,
-        1.0,
+        0.955,
         title,
         transform=background_axis.transAxes,
         color="white",
@@ -309,12 +316,20 @@ def plot_maps(
     sqrt_cmap.set_bad((0, 0, 0, 0))
     sqrt_norm = Normalize(vmin=0.0, vmax=args.sqrt_vmax)
     rr_cmap, rr_norm, rr_boundaries = rr_scale(args.rr_vmin, args.rr_vmax)
+    rr_narrow_cmap, rr_narrow_norm, rr_narrow_boundaries = rr_scale(
+        args.rr_narrow_vmin,
+        args.rr_narrow_vmax,
+    )
 
     for stem, title, values, scale in panels:
         if scale == "sqrt":
             cmap = sqrt_cmap
             norm = sqrt_norm
             ticks = tuple(np.arange(0.0, args.sqrt_vmax + 0.001, 0.1))
+        elif scale == "rr_narrow":
+            cmap = rr_narrow_cmap
+            norm = rr_narrow_norm
+            ticks = rr_narrow_boundaries
         else:
             cmap = rr_cmap
             norm = rr_norm
@@ -360,8 +375,8 @@ def main() -> None:
         )
         model_stem = model.replace("-", "_")
         panels: list[tuple[str, str, np.ndarray, str]] = [
-            (f"figure6_{model_stem}_a_sqrt_p1", r"$\sqrt{p_1}$", sqrt_p1, "sqrt"),
-            (f"figure6_{model_stem}_b_p2_over_p1", r"$p_2/p_1$", empirical_rr, "rr"),
+            (f"figure6_{model_stem}_a_sqrt_p1", r"$\mathbf{\sqrt{p_1}}$", sqrt_p1, "sqrt"),
+            (f"figure6_{model_stem}_b_p2_over_p1", r"$\mathbf{p_2/p_1}$", empirical_rr, "rr_narrow"),
         ]
         for letter, predictor, title in PREDICTORS:
             stem = f"figure6_{model_stem}_{letter}_{predictor}_relative_risk"
@@ -370,7 +385,7 @@ def main() -> None:
                     stem,
                     title,
                     load_relative_risk_map(result_dir, predictor, anatomical_img, voxel_ids),
-                    "rr",
+                    "rr_narrow" if letter in {"c", "d"} else "rr",
                 )
             )
 

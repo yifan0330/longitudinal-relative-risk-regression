@@ -293,9 +293,10 @@ def plot_maps(
             alpha=args.overlay_alpha,
         )
         axis.set_xlim(*x_limits)
-        axis.set_ylim(*y_limits)
+        label_band = 0.11 * (y_limits[1] - y_limits[0])
+        axis.set_ylim(y_limits[0], y_limits[1] + label_band)
         axis.text(
-            0.015,
+            -0.035,
             0.985,
             title,
             transform=axis.transAxes,
@@ -304,6 +305,7 @@ def plot_maps(
             fontweight="bold",
             ha="left",
             va="top",
+            clip_on=False,
         )
         axis.set_xticks([])
         axis.set_yticks([])

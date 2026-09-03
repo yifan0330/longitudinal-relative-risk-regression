@@ -12,7 +12,7 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
-from matplotlib.colors import BoundaryNorm
+from matplotlib.colors import Normalize
 import nibabel as nib
 import numpy as np
 
@@ -232,10 +232,10 @@ def paired_output_paths(output: Path, pdf_output: Path | None) -> tuple[Path, Pa
 
 
 def stratified_scale(boundaries: tuple[float, ...]):
-    """Create the discrete color scale used for an alpha or phi map."""
-    cmap = plt.get_cmap("RdBu_r", len(boundaries) - 1).copy()
+    """Create the continuous color scale used for an alpha or phi map."""
+    cmap = plt.get_cmap("RdBu_r").copy()
     cmap.set_bad((0, 0, 0, 0))
-    norm = BoundaryNorm(boundaries, cmap.N, clip=True)
+    norm = Normalize(vmin=boundaries[0], vmax=boundaries[-1], clip=True)
     return cmap, norm
 
 
@@ -280,6 +280,17 @@ def plot_single_map(
     background_axis.set_zorder(0)
     for spine in background_axis.spines.values():
         spine.set_visible(False)
+    background_axis.text(
+        0.005,
+        0.985,
+        label,
+        transform=background_axis.transAxes,
+        color="white",
+        fontsize=13,
+        ha="left",
+        va="top",
+        clip_on=False,
+    )
 
     for local_column, slice_index in enumerate(slices):
         axis = figure.add_subplot(grid[0, local_column])
@@ -308,25 +319,12 @@ def plot_single_map(
         axis.set_yticks([])
         for spine in axis.spines.values():
             spine.set_visible(False)
-        if local_column == 0:
-            axis.text(
-                0.015,
-                0.985,
-                label,
-                transform=axis.transAxes,
-                color="white",
-                fontsize=13,
-                ha="left",
-                va="top",
-            )
 
     colorbar_axis = figure.add_subplot(grid[0, 3])
     colorbar = figure.colorbar(
         ScalarMappable(norm=normalization, cmap=cmap),
         cax=colorbar_axis,
-        boundaries=boundaries,
         ticks=ticks,
-        spacing="proportional",
     )
     colorbar.ax.tick_params(labelsize=8, length=3, pad=2)
     colorbar.outline.set_linewidth(0.6)
@@ -381,7 +379,7 @@ def main() -> None:
         anatomical_img,
         alpha_map,
         args,
-        label=r"$\alpha$",
+        label=r"$\hat{\alpha}$",
         boundaries=(args.alpha_vmin, -0.5, 0.0, 0.5, args.alpha_vmax),
         ticks=(args.alpha_vmin, -0.5, 0.0, 0.5, args.alpha_vmax),
         output=alpha_png,
@@ -391,7 +389,7 @@ def main() -> None:
         anatomical_img,
         phi_map,
         args,
-        label=r"$\phi$",
+        label=r"$\hat{\phi}$",
         boundaries=(args.phi_vmin, 0.5, 1.0, 1.5, args.phi_vmax),
         ticks=(args.phi_vmin, 0.5, 1.0, 1.5, args.phi_vmax),
         output=phi_png,
