@@ -30,6 +30,7 @@ from UKB_validation.ukb_python_experiment import (
     model_is_poisson,
     model_result_dir,
 )
+from UKB_validation.io import load_aligned_voxel_values
 from UKB_validation.mapping import values_to_map as _values_to_map
 
 
@@ -113,13 +114,12 @@ def load_beta_matrix(result_dir: Path, anatomical: nib.Nifti1Image, voxel_ids: n
     beta = np.full((voxel_ids.size, len(COEFFICIENT_NAMES)), np.nan, dtype=float)
     for index, coefficient_name in enumerate(COEFFICIENT_NAMES):
         path = result_dir / f"estimate_{coefficient_name}_GEE.nii.gz"
-        if not path.is_file():
-            raise FileNotFoundError(f"Coefficient map not found: {path}")
-        image = nib.load(path)
-        if image.shape != anatomical.shape or not np.allclose(image.affine, anatomical.affine):
-            raise ValueError(f"Coefficient map is not aligned with anatomical image: {path}")
-        data = np.asarray(image.get_fdata(), dtype=float)
-        beta[:, index] = data.ravel(order="F")[voxel_ids - 1]
+        beta[:, index] = load_aligned_voxel_values(
+            path,
+            anatomical,
+            voxel_ids,
+            label="coefficient map",
+        )
     return beta
 
 

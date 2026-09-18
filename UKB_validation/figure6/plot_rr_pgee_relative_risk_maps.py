@@ -26,8 +26,11 @@ from UKB_validation.ukb_python_experiment import (
     ensure_model_outputs,
     model_result_dir,
 )
-from UKB_validation.paths import DEFAULT_UKB_DIR
-from UKB_validation.io import load_empirical_visits, load_voxel_ids as _load_voxel_ids
+from UKB_validation.io import (
+    load_aligned_voxel_values,
+    load_empirical_visits,
+    load_voxel_ids as _load_voxel_ids,
+)
 from UKB_validation.mapping import values_to_map as _values_to_map
 
 
@@ -166,13 +169,12 @@ def load_relative_risk_map(
 ) -> np.ndarray:
     """Load a coefficient map and exponentiate it into relative risks."""
     path = result_dir / f"estimate_{predictor}_GEE.nii.gz"
-    if not path.is_file():
-        raise FileNotFoundError(f"Coefficient map not found: {path}")
-    image = nib.load(path)
-    if image.shape != anatomical.shape or not np.allclose(image.affine, anatomical.affine):
-        raise ValueError(f"Coefficient map is not aligned with anatomical image: {path}")
-    beta_map = np.asarray(image.get_fdata(), dtype=float)
-    beta_values = beta_map.ravel(order="F")[voxel_ids - 1]
+    beta_values = load_aligned_voxel_values(
+        path,
+        anatomical,
+        voxel_ids,
+        label="coefficient map",
+    )
     with np.errstate(over="ignore", invalid="ignore"):
         rr_values = np.exp(beta_values)
     return values_to_map(rr_values, voxel_ids, anatomical.shape)

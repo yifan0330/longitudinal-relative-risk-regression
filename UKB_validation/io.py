@@ -60,6 +60,21 @@ def values_at_voxels(
     return data.ravel(order="F")[voxel_ids - 1]
 
 
+def load_aligned_voxel_values(
+    path: Path,
+    anatomical: nib.Nifti1Image,
+    voxel_ids: np.ndarray,
+    *,
+    label: str = "map",
+) -> np.ndarray:
+    """Load an aligned map and extract values at UKB mask voxels."""
+    return values_at_voxels(
+        load_aligned_map(path, anatomical, label=label),
+        voxel_ids,
+        source=str(path),
+    )
+
+
 def load_empirical_visits(
     ukb_dir: Path, voxel_count: int
 ) -> tuple[np.ndarray, np.ndarray]:
