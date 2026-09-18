@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 import warnings
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Any
 
 import numpy as np
@@ -243,6 +244,7 @@ def estimate_p0_observed(data: pd.DataFrame) -> float:
     return float(unexposed.mean())
 
 
+@lru_cache(maxsize=1)
 def _load_legacy_fitters() -> tuple[Any, Any, Any]:
     """Import historical fitting routines only when a real fit is requested."""
     from gee_logPoisson_dispersion_fn import gee_dispersion_run

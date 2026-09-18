@@ -21,7 +21,11 @@ from UKB_validation.ukb_python_experiment import (
     model_result_dir,
 )
 from UKB_validation.paths import DEFAULT_UKB_DIR
-from UKB_validation.io import load_empirical_visits, load_voxel_ids as _load_voxel_ids
+from UKB_validation.io import (
+    load_aligned_voxel_values,
+    load_empirical_visits,
+    load_voxel_ids as _load_voxel_ids,
+)
 
 
 DEFAULT_VOXEL_IDS = DEFAULT_UKB_DIR / "voxel_IDs_CVR.dat"
@@ -169,13 +173,12 @@ def load_exponentiated_estimates(
     estimates: dict[str, np.ndarray] = {}
     for predictor, _ in PREDICTORS:
         path = result_dir / f"estimate_{predictor}_GEE.nii.gz"
-        if not path.is_file():
-            raise FileNotFoundError(f"Coefficient map not found: {path}")
-        image = nib.load(path)
-        if image.shape != template.shape or not np.allclose(image.affine, template.affine):
-            raise ValueError(f"Coefficient map is not aligned with anatomical image: {path}")
-        # Keep coefficient lookup aligned with the one-based UKB voxel mask.
-        beta_values = np.asarray(image.get_fdata(), dtype=float).ravel(order="F")[voxel_ids - 1]
+        beta_values = load_aligned_voxel_values(
+            path,
+            template,
+            voxel_ids,
+            label="coefficient map",
+        )
         with np.errstate(over="ignore", invalid="ignore"):
             estimates[predictor] = np.exp(beta_values)
     return estimates

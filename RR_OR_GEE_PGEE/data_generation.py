@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from collections.abc import Sequence
+from functools import lru_cache
 
 import numpy as np
 import pandas as pd
@@ -14,6 +15,7 @@ from .config import REPO_ROOT, Scenario, rep_seed
 SIM_CODE_DIR = REPO_ROOT / "Simulations" / "code"
 
 
+@lru_cache(maxsize=1)
 def _historical_generators():
     """Load the historical simulation helpers only when data generation is requested."""
     import sys
